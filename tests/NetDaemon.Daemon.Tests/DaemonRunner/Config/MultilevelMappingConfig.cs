@@ -1,6 +1,6 @@
 ﻿namespace NetDaemon.Daemon.Tests.DaemonRunner.Config
 {
-    public class MultilevelMappingConfig : Common.Reactive.NetDaemonRxApp
+    public class MultilevelMappingConfig : NetDaemon.Common.Reactive.NetDaemonRxApp
     {
         public Node? Root { get; set; }
     }

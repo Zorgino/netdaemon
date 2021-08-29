@@ -1,94 +1,35 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.IO;
-using System.Linq;
 using NetDaemon.Common;
 using NetDaemon.Common.Exceptions;
 using YamlDotNet.RepresentationModel;
 
 namespace NetDaemon.Daemon.Config
 {
-    internal class YamlAppConfig
+    public class YamlAppConfigEntry
     {
-        private readonly IEnumerable<Type> _types;
-        private readonly YamlStream _yamlStream;
-        private readonly IYamlConfig _yamlConfig;
-        private readonly string _yamlFilePath;
-        private readonly IAppInstantiator _appInstantiator;
+        private readonly YamlMappingNode _yamlMappingNode;
+        private readonly YamlConfigEntry _yamlConfigEntry;
 
-        public YamlAppConfig(IEnumerable<Type> types, TextReader reader, IYamlConfig yamlConfig, string yamlFilePath,
-            IAppInstantiator appInstantiator)
+        public string AppId { get; }
+
+        public YamlAppConfigEntry(string appId,
+                YamlMappingNode yamlMappingNode,
+                YamlConfigEntry yamlConfigEntry)
         {
-            _types = types;
-            _yamlStream = new YamlStream();
-            _yamlStream.Load(reader);
+            AppId = appId;
 
-            _yamlConfig = yamlConfig;
-            _yamlFilePath = yamlFilePath;
-            _appInstantiator = appInstantiator;
+            _yamlMappingNode = yamlMappingNode;
+            _yamlConfigEntry = yamlConfigEntry;
         }
 
-        [SuppressMessage("", "CA1508")]
-        [SuppressMessage("", "CA1065")]
-        public IEnumerable<ApplicationContext> GetInstances()
-        {
-            var instances = new List<ApplicationContext>();
-            // For each app instance defined in the yaml config
-            foreach (KeyValuePair<YamlNode, YamlNode> app in (YamlMappingNode)_yamlStream.Documents[0].RootNode)
-            {
-                string appId = null!;
-                try
-                {
-                    if (app.Key.NodeType != YamlNodeType.Scalar ||
-                        app.Value.NodeType != YamlNodeType.Mapping)
-                    {
-                        continue;
-                    }
-
-                    appId = ((YamlScalarNode)app.Key).Value!;
-         
-                    // Get the class
-                    string? appClass = GetTypeNameFromClassConfig((YamlMappingNode)app.Value);
-                    Type? appType = _types.FirstOrDefault(n => n.FullName?.ToLowerInvariant() == appClass);
-
-                    if (appType != null)
-                    {
-                        var appContext = InstanceAndSetPropertyConfig(appType, (YamlMappingNode)app.Value, appId);
-                        
-                        instances.Add(appContext);
-                    }
-                }
-                catch (Exception e)
-                {
-                    throw new NetDaemonException($"Error instancing application {appId}", e);
-                }
-            }
-
-            return instances;
-        }
-
-        public ApplicationContext InstanceAndSetPropertyConfig(
-            Type netDaemonAppType,
-            YamlMappingNode appNode,
-            string appId)
-        {
-            _ = appNode ??
-                throw new NetDaemonArgumentNullException(nameof(appNode));
-
-            var appContext = _appInstantiator.Instantiate(netDaemonAppType, appId);
-
-            SetPropertyConfig(appNode, appContext);
-            
-            return appContext;
-        }
-
-        public void SetPropertyConfig(YamlMappingNode appNode, ApplicationContext applicationContext)
+        public void SetPropertyConfig(ApplicationContext applicationContext)
         {
             var appInstance = applicationContext.ApplicationInstance;
 
-            foreach (KeyValuePair<YamlNode, YamlNode> entry in appNode.Children)
+            foreach (KeyValuePair<YamlNode, YamlNode> entry in _yamlMappingNode.Children)
             {
                 string? scalarPropertyName = ((YamlScalarNode)entry.Key).Value;
                 try
@@ -99,7 +40,7 @@ namespace NetDaemon.Daemon.Config
 
                     var prop = appInstance.GetType().GetYamlProperty(scalarPropertyName) ??
                                throw new MissingMemberException(
-                                   $"{scalarPropertyName} is missing from the type {appInstance.GetType()}");
+                                       $"{scalarPropertyName} is missing from the type {appInstance.GetType()}");
 
                     var instance = InstanceProperty(appInstance, prop.PropertyType, entry.Value, applicationContext);
 
@@ -124,7 +65,7 @@ namespace NetDaemon.Daemon.Config
                     return ((YamlScalarNode) node).ToObject(instanceType, applicationContext);
                 }
                 case YamlNodeType.Sequence when !instanceType.IsGenericType ||
-                                                instanceType.GetGenericTypeDefinition() != typeof(IEnumerable<>):
+                                                instanceType?.GetGenericTypeDefinition() != typeof(IEnumerable<>):
                     return null;
                 case YamlNodeType.Sequence:
                 {
@@ -155,7 +96,7 @@ namespace NetDaemon.Daemon.Config
 
                 var childProp = instanceType.GetYamlProperty(scalarPropertyName) ??
                                 throw new MissingMemberException(
-                                    $"{scalarPropertyName} is missing from the type {instanceType}");
+                                        $"{scalarPropertyName} is missing from the type {instanceType}");
 
                 var valueType = entry.Value.NodeType;
                 object? result = null;
@@ -169,7 +110,7 @@ namespace NetDaemon.Daemon.Config
 
                     case YamlNodeType.Scalar:
                         result = InstanceProperty(instance, childProp.PropertyType,
-                            (YamlScalarNode) entry.Value, applicationContext);
+                                (YamlScalarNode) entry.Value, applicationContext);
                         break;
 
                     case YamlNodeType.Mapping:
@@ -186,19 +127,19 @@ namespace NetDaemon.Daemon.Config
         [SuppressMessage("", "CA1508")]
         private IList CreateSequenceInstance(object? parent, Type instanceType, YamlNode node, ApplicationContext applicationContext)
         {
-            Type listType = instanceType.GetGenericArguments()[0] ??
+            Type listType = instanceType?.GetGenericArguments()[0] ??
                             throw new NetDaemonNullReferenceException(
-                                $"The property {instanceType.Name} of Class {parent?.GetType().Name} is not compatible with configuration");
+                                    $"The property {instanceType?.Name} of Class {parent?.GetType().Name} is not compatible with configuration");
 
             IList list = listType.CreateListOfPropertyType() ??
                          throw new NetDaemonNullReferenceException(
-                             "Failed to create list type, please check {prop.Name} of Class {app.GetType().Name}");
+                                 "Failed to create list type, please check {prop.Name} of Class {app.GetType().Name}");
 
             foreach (YamlNode item in ((YamlSequenceNode) node).Children)
             {
                 var instance = InstanceProperty(null, listType, item, applicationContext) ??
                                throw new NotSupportedException(
-                                   $"The class {parent?.GetType().Name} has wrong type in items");
+                                       $"The class {parent?.GetType().Name} has wrong type in items");
 
                 list.Add(instance);
             }
@@ -211,25 +152,9 @@ namespace NetDaemon.Daemon.Config
             if (scalarNode.Tag != "!secret" && scalarNode.Value != null)
                 return;
 
-            var secretReplacement =
-                _yamlConfig.GetSecretFromPath(scalarNode.Value!, Path.GetDirectoryName(_yamlFilePath)!);
-
+            var secretReplacement = _yamlConfigEntry.GetSecret(scalarNode.Value!);
             scalarNode.Value = secretReplacement ??
                                throw new NetDaemonException($"{scalarNode.Value!} not found in secrets.yaml");
-        }
-
-        private static string? GetTypeNameFromClassConfig(YamlMappingNode appNode)
-        {
-            KeyValuePair<YamlNode, YamlNode> classChild = appNode.Children.FirstOrDefault(n =>
-                ((YamlScalarNode) n.Key).Value?.ToLowerInvariant() == "class");
-
-            if (classChild.Value.NodeType != YamlNodeType.Scalar)
-            {
-                return null;
-            }
-
-            var scalarNode = (YamlScalarNode) classChild.Value;
-            return scalarNode.Value?.ToLowerInvariant();
         }
     }
 }
