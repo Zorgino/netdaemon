@@ -24,8 +24,23 @@ namespace NetDaemon.Common
             // this makes sure they will all be disposed along with the app
             _serviceScope = serviceProvider.CreateScope();
             ServiceProvider = _serviceScope.ServiceProvider;
-            
-            ApplicationInstance = ActivatorUtilities.GetServiceOrCreateInstance(_serviceScope.ServiceProvider, applicationType);
+
+            var hasINetDaemonParam = applicationType
+                .GetConstructors()
+                .First()
+                .GetParameters()
+                .Any(p => p.ParameterType == typeof(INetDaemonRxApp));
+
+            object param = null;
+            if (hasINetDaemonParam)
+            {
+                param = ActivatorUtilities.CreateInstance<NetDaemonRxApp>(_serviceScope.ServiceProvider);
+                ApplicationInstance = ActivatorUtilities.CreateInstance(_serviceScope.ServiceProvider, applicationType, param);
+            }
+            else
+            {
+                ApplicationInstance = ActivatorUtilities.GetServiceOrCreateInstance(_serviceScope.ServiceProvider, applicationType);
+            }
             _applicationMetadata = InitializeMetaData();
             Id = id;
         }

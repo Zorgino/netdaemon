@@ -1124,9 +1124,9 @@ namespace NetDaemon.Daemon
             try
             {
                 // First do startup initialization to connect with this daemon instance
-                if (appInstance.ApplicationInstance is INetDaemonAppBase netDaemonAppBase)
+                if (appInstance.ApplicationInstance is INetDaemonInitialableApp initialableApp)
                 {
-                    await netDaemonAppBase.StartUpAsync(this).ConfigureAwait(false);
+                    await initialableApp.StartUpAsync(this).ConfigureAwait(false);
                 }
 
                 // The restore the state to load saved settings and if this app is enabled
