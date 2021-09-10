@@ -2,6 +2,7 @@
 using System.Linq;
 using JoySoftware.HomeAssistant.Model;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using NetDaemon.Common;
 using NetDaemon.Common.Reactive;
 using NetDaemon.Daemon.Config;
 using NetDaemon.Service.App.CodeGeneration.Helpers;
@@ -85,7 +86,7 @@ namespace NetDaemon.Service.App.CodeGeneration
             }
 
             var autoProperties = serviceArguments.Arguments
-                .Select(argument => Property(argument.TypeName!, argument.PropertyName!))
+                .Select(argument => Property(argument.TypeName!, argument.PropertyName!).ToPublic())
                 .ToArray();
 
             yield return Record(serviceArguments.TypeName, autoProperties).ToPublic();
@@ -103,9 +104,9 @@ namespace NetDaemon.Service.App.CodeGeneration
             if (service.Target is not null)
             {
                 yield return ParseMethod(
-                    $@"void {GetServiceMethodName(serviceName)}({typeof(HassTarget).FullName} target {(argsParametersString is not null ? "," : "")} {argsParametersString})
+                    $@"void {GetServiceMethodName(serviceName)}({typeof(Target).FullName} target {(argsParametersString is not null ? "," : "")} {argsParametersString})
                 {{
-                    {haContextVariableName}.CallServiceTargeted(""{domain}"", ""{serviceName}"", target {(serviceArguments is not null ? ", data" : string.Empty)});
+                    {haContextVariableName}.{nameof(INetDaemonRxApp.CallServiceTargeted)}(""{domain}"", ""{serviceName}"", target {(serviceArguments is not null ? ", data" : string.Empty)});
                 }}").ToPublic();
             }
             else
@@ -113,7 +114,7 @@ namespace NetDaemon.Service.App.CodeGeneration
                 yield return ParseMethod(
                     $@"void {GetServiceMethodName(serviceName)}({argsParametersString})
                 {{
-                    {haContextVariableName}.CallServiceTargeted(""{domain}"", ""{serviceName}"" {(serviceArguments is not null ? ", null" : "")} {(serviceArguments is not null ? ", data" : "")});
+                    {haContextVariableName}.{nameof(INetDaemonRxApp.CallService)}(""{domain}"", ""{serviceName}"" {(serviceArguments is not null ? $", {serviceArguments.GetParametersVariable()}" : "")});
                 }}").ToPublic();
             }
         }

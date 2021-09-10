@@ -23,23 +23,23 @@ namespace NetDaemon.Common.Reactive
         /// <param name="waitForResponse">Waits for Home Assistant to return result before returning</param>
         void SetState(dynamic state, dynamic? attributes = null, bool waitForResponse = false);
 
-        /// <summary>
-        ///     Toggles state on/off on entity
-        /// </summary>
-        /// <param name="attributes">The attributes to set. Use anonomous type</param>
-        void Toggle(dynamic? attributes = null);
-
-        /// <summary>
-        ///     Turn off entity
-        /// </summary>
-        /// <param name="attributes">The attributes to set. Use anonomous type.</param>
-        void TurnOff(dynamic? attributes = null);
-
-        /// <summary>
-        ///     Turn on entity
-        /// </summary>
-        /// <param name="attributes">The attributes to set. Use anonomous type.</param>
-        void TurnOn(dynamic? attributes = null);
+        // /// <summary>
+        // ///     Toggles state on/off on entity
+        // /// </summary>
+        // /// <param name="attributes">The attributes to set. Use anonomous type</param>
+        // void Toggle(dynamic? attributes = null);
+        //
+        // /// <summary>
+        // ///     Turn off entity
+        // /// </summary>
+        // /// <param name="attributes">The attributes to set. Use anonomous type.</param>
+        // void TurnOff(dynamic? attributes = null);
+        //
+        // /// <summary>
+        // ///     Turn on entity
+        // /// </summary>
+        // /// <param name="attributes">The attributes to set. Use anonomous type.</param>
+        // void TurnOn(dynamic? attributes = null);
 
         /// <summary>
         ///     Observable, All state changes inkluding attributes
@@ -112,14 +112,14 @@ namespace NetDaemon.Common.Reactive
             }
         }
 
-        /// <inheritdoc/>
-        public void Toggle(dynamic? attributes = null) => CallServiceOnEntity("toggle", attributes);
-
-        /// <inheritdoc/>
-        public void TurnOff(dynamic? attributes = null) => CallServiceOnEntity("turn_off", attributes);
-
-        /// <inheritdoc/>
-        public void TurnOn(dynamic? attributes = null) => CallServiceOnEntity("turn_on", attributes);
+        // /// <inheritdoc/>
+        // public void Toggle(dynamic? attributes = null) => CallServiceOnEntity("toggle", attributes);
+        //
+        // /// <inheritdoc/>
+        // public void TurnOff(dynamic? attributes = null) => CallServiceOnEntity("turn_off", attributes);
+        //
+        // /// <inheritdoc/>
+        // public void TurnOn(dynamic? attributes = null) => CallServiceOnEntity("turn_on", attributes);
 
         internal static string GetDomainFromEntity(string entity)
         {

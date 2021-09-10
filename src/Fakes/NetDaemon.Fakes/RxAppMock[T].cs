@@ -10,7 +10,6 @@ using System.Reactive.Linq;
 using Microsoft.Reactive.Testing;
 using NetDaemon.Common.Reactive.Services;
 using Newtonsoft.Json;
-using EntityState = NetDaemon.Common.EntityState;
 
 namespace NetDaemon.Daemon.Fakes
 {
@@ -60,8 +59,8 @@ namespace NetDaemon.Daemon.Fakes
                 var m = new Mock<IRxEntityBase>();
                 m.Setup(n => n.StateChanges).Returns(StateChangesObservable.Where(f => f.New?.EntityId == entityId && f.New?.State != f.Old?.State));
                 m.Setup(n => n.StateAllChanges).Returns(StateChangesObservable.Where(f => f.New?.EntityId == entityId));
-                m.Setup(e => e.TurnOn(It.IsAny<object?>())).Callback<object?>(attributes => UpdateMockState(entityId, "on", attributes));
-                m.Setup(e => e.TurnOff(It.IsAny<object?>())).Callback<object?>(attributes => UpdateMockState(entityId, "off", attributes));
+                // m.Setup(e => e.TurnOn(It.IsAny<object?>())).Callback<object?>(attributes => UpdateMockState(entityId, "on", attributes));
+                // m.Setup(e => e.TurnOff(It.IsAny<object?>())).Callback<object?>(attributes => UpdateMockState(entityId, "off", attributes));
                 return m.Object;
             });
 
@@ -76,8 +75,8 @@ namespace NetDaemon.Daemon.Fakes
                 var m = new Mock<IRxEntityBase>();
                 m.Setup(n => n.StateChanges).Returns(StateChangesObservable.Where(f => entityIds.Contains(f.New.EntityId) && f.New?.State != f.Old?.State));
                 m.Setup(n => n.StateAllChanges).Returns(StateChangesObservable.Where(f => entityIds.Contains(f.New.EntityId)));
-                m.Setup(e => e.TurnOn(It.IsAny<object?>())).Callback<object?>(attributes => UpdateMockState(entityIds, "on", attributes));
-                m.Setup(e => e.TurnOff(It.IsAny<object?>())).Callback<object?>(attributes => UpdateMockState(entityIds, "off", attributes));
+                // m.Setup(e => e.TurnOn(It.IsAny<object?>())).Callback<object?>(attributes => UpdateMockState(entityIds, "on", attributes));
+                // m.Setup(e => e.TurnOff(It.IsAny<object?>())).Callback<object?>(attributes => UpdateMockState(entityIds, "off", attributes));
                 return m.Object;
             });
 
@@ -88,8 +87,8 @@ namespace NetDaemon.Daemon.Fakes
                 var m = new Mock<IRxEntityBase>();
                 m.Setup(n => n.StateChanges).Returns(StateChangesObservable.Where(f => y.Contains(f.New.EntityId) && f.New?.State != f.Old?.State));
                 m.Setup(n => n.StateAllChanges).Returns(StateChangesObservable.Where(f => y.Contains(f.New.EntityId)));
-                m.Setup(e => e.TurnOn(It.IsAny<object?>())).Throws(new NotImplementedException());
-                m.Setup(e => e.TurnOff(It.IsAny<object?>())).Throws(new NotImplementedException());
+                // m.Setup(e => e.TurnOn(It.IsAny<object?>())).Throws(new NotImplementedException());
+                // m.Setup(e => e.TurnOff(It.IsAny<object?>())).Throws(new NotImplementedException());
                 return m.Object;
             });
 
@@ -361,72 +360,68 @@ namespace NetDaemon.Daemon.Fakes
             Verify(x => x.CallService(domain, service, It.IsAny<object>(), It.IsAny<bool>()), t);
         }
 
-        /// <summary>
-        ///     Verifies that the Entity turned on
-        /// </summary>
-        /// <param name="entityId"></param>
-        /// <param name="attributes"></param>
-        /// <param name="times">Nr of times called</param>
-        public void VerifyEntityTurnOn(string entityId, dynamic? attributes = null, Times? times = null)
-        {
-            if (attributes is not null && attributes is not object)
-                throw new NotSupportedException("attributes needs to be an object");
-
-            var t = times ?? Times.Once();
-
-            if (attributes is null)
-            {
-                Verify(x => x.Entity(entityId).TurnOn(It.IsAny<object>()), t);
-            }
-            else
-            {
-                Verify(x => x.Entity(entityId).TurnOn((object)attributes), t);
-            }
-        }
-
-        /// <summary>
-        ///     Verifies that the Entity turned off
-        /// </summary>
-        /// <param name="entityId"></param>
-        /// <param name="attributes"></param>
-        /// <param name="times">Nr of times called</param>
-        public void VerifyEntityTurnOff(string entityId, dynamic? attributes = null, Times? times = null)
-        {
-            if (attributes is not null && attributes is not object)
-                throw new NotSupportedException("attributes needs to be an object");
-            var t = times ?? Times.Once();
-            if (attributes is null)
-            {
-                Verify(x => x.Entity(entityId).TurnOff(It.IsAny<object>()), t);
-            }
-            else
-            {
-                Verify(x => x.Entity(entityId).TurnOff((object)attributes), t);
-            }
-        }
-
-        /// <summary>
-        ///     Verifies that the Entity toggles
-        /// </summary>
-        /// <param name="entityId"></param>
-        /// <param name="attributes"></param>
-        /// <param name="times">Nr of times called</param>
-        public void VerifyEntityToggle(string entityId, dynamic? attributes = null, Times? times = null)
-        {
-            if (attributes is not null && attributes is not object)
-                throw new NotSupportedException("attributes needs to be an object");
-
-            var t = times ?? Times.Once();
-
-            if (attributes is null)
-            {
-                Verify(x => x.Entity(entityId).Toggle(It.IsAny<object>()), t);
-            }
-            else
-            {
-                Verify(x => x.Entity(entityId).Toggle((object)attributes), t);
-            }
-        }
+        // /// <summary>
+        // ///     Verifies that the Entity turned on
+        // /// </summary>
+        // /// <param name="entityId"></param>
+        // /// <param name="attributes"></param>
+        // /// <param name="times">Nr of times called</param>
+        // public void VerifyEntityTurnOn(string entityId, dynamic? attributes = null, Times? times = null)
+        // {
+        //     if (attributes is not null && attributes is not object)
+        //         throw new NotSupportedException("attributes needs to be an object");
+        //
+        //     var t = times ?? Times.Once();
+        //
+        //     if (attributes is null)
+        //     {
+        //         Verify(x => x.Entity(entityId).TurnOn(It.IsAny<object>()), t);
+        //     }
+        //     else
+        //     {
+        //         Verify(x => x.Entity(entityId).TurnOn((object)attributes), t);
+        //     }
+        // }
+        //
+        // /// <summary>
+        // ///     Verifies that the Entity turned off
+        // /// </summary>
+        // /// <param name="entityId"></param>
+        // /// <param name="attributes"></param>
+        // /// <param name="times">Nr of times called</param>
+        // public void VerifyEntityTurnOff(string entityId, dynamic? attributes = null, Times? times = null)
+        // {
+        //     if (attributes is not null && attributes is not object)
+        //         throw new NotSupportedException("attributes needs to be an object");
+        //     var t = times ?? Times.Once();
+        //     if (attributes is null)
+        //     {
+        //         Verify(x => x.Entity(entityId).TurnOff(It.IsAny<object>()), t);
+        //     }
+        //     else
+        //     {
+        //         Verify(x => x.Entity(entityId).TurnOff((object)attributes), t);
+        //     }
+        // }
+        //
+        // /// <summary>
+        // ///     Verifies that the Entity toggles
+        // /// </summary>
+        // /// <param name="entityId"></param>
+        // /// <param name="attributes"></param>
+        // /// <param name="times">Nr of times called</param>
+        // public void VerifyEntityToggle(string entityId, dynamic? attributes = null, Times? times = null)
+        // {
+        //     if (attributes is not null && attributes is not object)
+        //         throw new NotSupportedException("attributes needs to be an object");
+        //
+        //     var t = times ?? Times.Once();
+        //
+        //     var attributesObj = (object)attributes ?? It.IsAny<object>();
+        //
+        //     // VerifyCallService(new Target(entityId), null, "toggle", attributesObj, t);
+        //     Verify(x => x.Entity(entityId).Toggle(attributesObj), t);
+        // }
 
         /// <summary>
         ///     Verifies that the Entity set state

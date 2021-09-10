@@ -2,6 +2,7 @@
 using System.Linq;
 using JoySoftware.HomeAssistant.Model;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using NetDaemon.Common.Reactive.Services;
 using NetDaemon.Service.App.CodeGeneration.Helpers;
 using static NetDaemon.Service.App.CodeGeneration.Helpers.NamingHelper;
 using static NetDaemon.Service.App.CodeGeneration.Helpers.SyntaxFactoryHelper;
@@ -55,7 +56,7 @@ namespace NetDaemon.Service.App.CodeGeneration
             yield return ParseMethod(
                 $@"void {GetServiceMethodName(serviceName)}(this {entityTypeName} entity {(args is not null ? $", {args.GetParametersString()}" : string.Empty)})
             {{
-                entity.CallServiceTargeted(""{serviceName}""{(args is not null ? $", {args.GetParametersVariable()}" : string.Empty)});
+                entity.{nameof(RxEntityBase.CallService)}(""{serviceName}""{(args is not null ? $", {args.GetParametersVariable()}" : string.Empty)});
             }}").ToPublic().ToStatic();
 
             if (args is not null)
@@ -63,7 +64,7 @@ namespace NetDaemon.Service.App.CodeGeneration
                 yield return ParseMethod(
                     $@"void {GetServiceMethodName(serviceName)}(this {entityTypeName} entity , {args.GetParametersDecomposedString()})
                 {{
-                    entity.CallServiceTargeted(""{serviceName}"", {args.GetParametersDecomposedVariable()});
+                    entity.{nameof(RxEntityBase.CallService)}(""{serviceName}"", {args.GetParametersDecomposedVariable()});
                 }}").ToPublic().ToStatic();
             }
         }

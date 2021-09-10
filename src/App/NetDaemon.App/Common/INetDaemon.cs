@@ -66,6 +66,6 @@ namespace NetDaemon.Common
         /// </summary>
         public IServiceProvider? ServiceProvider { get; }
 
-        void CallServiceTargeted(string domain, string service, HassTarget? target = null, object? data = null, bool waitForResponse = false);
+        void CallServiceTargeted(string domain, string service, Target? target = null, object? data = null, bool waitForResponse = false);
     }
 }

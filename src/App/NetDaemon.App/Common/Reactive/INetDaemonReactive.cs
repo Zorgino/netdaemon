@@ -70,7 +70,7 @@ namespace NetDaemon.Common.Reactive
         /// <param name="service">Service name</param>
         /// <param name="data">Data provided to service. Use anonomous type</param>
         /// <param name="waitForResponse">Waits for Home Assistant to return result before returning</param>
-        void CallService(string domain, string service, dynamic? data, bool waitForResponse = false);
+        void CallService(string domain, string service, dynamic? data = null, bool waitForResponse = false);
 
         /// <summary>
         ///     Calls service in Home Assistant
@@ -134,6 +134,8 @@ namespace NetDaemon.Common.Reactive
         /// </summary>
         /// <param name="entityId">EntityId</param>
         IRxEntityBase Entity(string entityId);
+
+        void CallServiceTargeted(string domain, string service, Target target, dynamic? data = null, bool waitForResponse = false);
     }
 
     /// <summary>
@@ -182,7 +184,5 @@ namespace NetDaemon.Common.Reactive
         /// <param name="timespan">Timespan to delay</param>
         /// <param name="action">Action to run</param>
         IDisposable RunIn(TimeSpan timespan, Action action);
-
-        void CallServiceTargeted(string domain, string service, HassTarget? target = null, dynamic? data = null, bool waitForResponse = false);
     }
 }
