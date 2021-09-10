@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json.Serialization;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using NetDaemon.Common.Reactive;
+using NetDaemon.Common.Reactive.Services;
 using NetDaemon.Daemon.Config;
-using NetDaemon.Model3.Common;
-using NetDaemon.Model3.Entities;
 using NetDaemon.Service.App.CodeGeneration.Extensions;
 using NetDaemon.Service.App.CodeGeneration.Helpers;
 using static NetDaemon.Service.App.CodeGeneration.Helpers.NamingHelper;
@@ -57,7 +57,7 @@ namespace NetDaemon.Service.App.CodeGeneration
 
         private static TypeDeclarationSyntax GenerateRootEntitiesClass(IEnumerable<string> domains)
         {
-            var haContextNames = GetNames<IHaContext>();
+            var haContextNames = GetNames<INetDaemonRxApp>();
 
             var properties = domains.Select(domain =>
             {
@@ -67,7 +67,7 @@ namespace NetDaemon.Service.App.CodeGeneration
                 return ParseProperty($"{entitiesTypeName} {entitiesPropertyName} => new(_{haContextNames.VariableName});").ToPublic();
             }).ToArray();
 
-            return ClassWithInjected<IHaContext>("Entities").WithBase((string)"IEntities").AddMembers(properties).ToPublic();
+            return ClassWithInjected<INetDaemonRxApp>("Entities").WithBase((string)"IEntities").AddMembers(properties).ToPublic();
         }
 
         private static IEnumerable<TypeDeclarationSyntax> GenerateEntityAttributeRecords(IEnumerable<OldEntityState> entities)
@@ -116,7 +116,7 @@ namespace NetDaemon.Service.App.CodeGeneration
 
         private static TypeDeclarationSyntax GenerateEntityDomainType(string domain, IEnumerable<string> entities)
         {
-            var entityClass = ClassWithInjected<IHaContext>(GetEntitiesTypeName(domain)).ToPublic();
+            var entityClass = ClassWithInjected<INetDaemonRxApp>(GetEntitiesTypeName(domain)).ToPublic();
 
             var domainEntities = entities.Where(EntityIsOfDomain(domain)).ToList();
 
@@ -134,7 +134,7 @@ namespace NetDaemon.Service.App.CodeGeneration
         {
             var entityName = EntityIdHelper.GetEntity(entityId);
 
-            var propertyCode = $@"{GetDomainEntityTypeName(domain)} {entityName.ToNormalizedPascalCase((string)"E_")} => new(_{GetNames<IHaContext>().VariableName}, ""{entityId}"");";
+            var propertyCode = $@"{GetDomainEntityTypeName(domain)} {entityName.ToNormalizedPascalCase((string)"E_")} => new(_{GetNames<INetDaemonRxApp>().VariableName}, ""{entityId}"");";
 
             return ParseProperty(propertyCode).ToPublic();
         }
@@ -145,17 +145,17 @@ namespace NetDaemon.Service.App.CodeGeneration
 
             var entityClass = $"{GetDomainEntityTypeName(domain)}";
 
-            var baseClass = $"{typeof(Entity).FullName}<{entityClass}, {typeof(EntityState).FullName}<string, {attributesGeneric}>, string, {attributesGeneric}>";
+            var baseClass = $"{typeof(RxEntityBase).FullName}<{entityClass}, {typeof(OldEntityState).FullName}<string, {attributesGeneric}>, string, {attributesGeneric}>";
 
-            var (className, variableName) = GetNames<IHaContext>();
-            var classDeclaration = $@"record {entityClass} : {baseClass}
+            var (className, variableName) = GetNames<INetDaemonRxApp>();
+            var classDeclaration = $@"class {entityClass} : {typeof(RxEntityBase).FullName}
                                     {{
-                                            public {domain.ToPascalCase()}Entity({className} {variableName}, string entityId) : base({variableName}, entityId)
+                                            public {domain.ToPascalCase()}Entity({className} {variableName}, string entityId) : base({variableName}, new [] {{ entityId }})
                                             {{
                                             }}
                                     }}";
 
-            return ParseRecord(classDeclaration).ToPublic();
+            return ParseClass(classDeclaration).ToPublic();
         }
         /// <summary>
         ///     Returns a list of domains from all entities

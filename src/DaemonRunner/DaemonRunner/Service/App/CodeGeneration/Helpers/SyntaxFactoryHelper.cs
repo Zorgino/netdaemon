@@ -92,7 +92,7 @@ namespace NetDaemon.Service.App.CodeGeneration.Helpers
             return node;
         }
 
-        private static ClassDeclarationSyntax ParseClass(string code)
+        public static ClassDeclarationSyntax ParseClass(string code)
         {
             return Parse<ClassDeclarationSyntax>(code);
         }

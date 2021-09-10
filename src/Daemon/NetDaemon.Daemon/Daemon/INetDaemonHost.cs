@@ -71,6 +71,5 @@ namespace NetDaemon.Daemon
         ///     Returns true of the NetDaemon custom component is installed
         /// </summary>
         bool HomeAssistantHasNetDaemonIntegration();
-        void CallService(string domain, string service, HassTarget target, object? data = null, bool waitForResponse = false);
     }
 }

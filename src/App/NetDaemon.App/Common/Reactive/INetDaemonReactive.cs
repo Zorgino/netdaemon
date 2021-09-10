@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading;
+using JoySoftware.HomeAssistant.Model;
 using NetDaemon.Common.Reactive.Services;
 
 namespace NetDaemon.Common.Reactive
@@ -181,5 +182,7 @@ namespace NetDaemon.Common.Reactive
         /// <param name="timespan">Timespan to delay</param>
         /// <param name="action">Action to run</param>
         IDisposable RunIn(TimeSpan timespan, Action action);
+
+        void CallServiceTargeted(string domain, string service, HassTarget target, dynamic? data, bool waitForResponse = false);
     }
 }

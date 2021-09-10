@@ -8,6 +8,7 @@ using System.Reactive.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
+using JoySoftware.HomeAssistant.Model;
 using Microsoft.Extensions.Logging;
 using NetDaemon.Common.Exceptions;
 using NetDaemon.Common.Reactive.Services;
@@ -67,6 +68,12 @@ namespace NetDaemon.Common.Reactive
         {
             _ = Daemon ?? throw new NetDaemonNullReferenceException($"{nameof(Daemon)} cant be null!");
             Daemon.CallService(domain, service, data, waitForResponse);
+        }
+
+        public void CallServiceTargeted(string domain, string service, HassTarget target, dynamic? data, bool waitForResponse = false)
+        {
+            _ = Daemon ?? throw new NetDaemonNullReferenceException($"{nameof(Daemon)} cant be null!");
+            Daemon.CallServiceTargeted(domain, service, target, data);
         }
 
         /// <inheritdoc/>

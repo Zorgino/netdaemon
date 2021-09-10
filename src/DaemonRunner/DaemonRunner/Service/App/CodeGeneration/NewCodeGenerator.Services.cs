@@ -2,9 +2,8 @@
 using System.Linq;
 using JoySoftware.HomeAssistant.Model;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using NetDaemon.Common.Reactive;
 using NetDaemon.Daemon.Config;
-using NetDaemon.Model3.Common;
-using NetDaemon.Model3.Entities;
 using NetDaemon.Service.App.CodeGeneration.Helpers;
 using static NetDaemon.Service.App.CodeGeneration.Helpers.NamingHelper;
 using static NetDaemon.Service.App.CodeGeneration.Helpers.SyntaxFactoryHelper;
@@ -43,7 +42,7 @@ namespace NetDaemon.Service.App.CodeGeneration
 
         private static TypeDeclarationSyntax GenerateRootServicesType(IEnumerable<string> domains)
         {
-            var haContextNames = GetNames<IHaContext>();
+            var haContextNames = GetNames<INetDaemonRxApp>();
             var properties = domains.Select(domain =>
             {
                 var propertyCode = $"{GetServicesTypeName(domain)} {domain.ToPascalCase()} => new(_{haContextNames.VariableName});";
@@ -51,7 +50,7 @@ namespace NetDaemon.Service.App.CodeGeneration
                 return ParseProperty(propertyCode).ToPublic();
             }).ToArray();
 
-            return ClassWithInjected<IHaContext>("Services").WithBase((string)"IServices").AddMembers(properties).ToPublic();
+            return ClassWithInjected<INetDaemonRxApp>("Services").WithBase((string)"IServices").AddMembers(properties).ToPublic();
         }
 
         private static TypeDeclarationSyntax GenerateRootServicesInterface(IEnumerable<string> domains)
@@ -69,7 +68,7 @@ namespace NetDaemon.Service.App.CodeGeneration
 
         private static TypeDeclarationSyntax GenerateServicesDomainType(string domain, IEnumerable<HassService> services)
         {
-            var serviceTypeDeclaration = ClassWithInjected<IHaContext>(GetServicesTypeName(domain)).ToPublic();
+            var serviceTypeDeclaration = ClassWithInjected<INetDaemonRxApp>(GetServicesTypeName(domain)).ToPublic();
 
             var serviceMethodDeclarations = services.SelectMany(service => GenerateServiceMethod(domain, service)).ToArray();
 
@@ -97,14 +96,14 @@ namespace NetDaemon.Service.App.CodeGeneration
             var serviceName = service.Service!;
 
             var serviceArguments = GetServiceArguments(domain, service);
-            var haContextVariableName = GetVariableName<IHaContext>("_");
+            var haContextVariableName = GetVariableName<INetDaemonRxApp>("_");
 
             var argsParametersString = serviceArguments is not null ? $"{serviceArguments.TypeName} data {(serviceArguments.HasRequiredArguments ? "" : "= null")}" : null ;
 
             if (service.Target is not null)
             {
                 yield return ParseMethod(
-                    $@"void {GetServiceMethodName(serviceName)}({typeof(Target).FullName} target {(argsParametersString is not null ? "," : "")} {argsParametersString})
+                    $@"void {GetServiceMethodName(serviceName)}({typeof(HassTarget).FullName} target {(argsParametersString is not null ? "," : "")} {argsParametersString})
                 {{
                     {haContextVariableName}.CallService(""{domain}"", ""{serviceName}"", target {(serviceArguments is not null ? ", data" : string.Empty)});
                 }}").ToPublic();

@@ -55,7 +55,7 @@ namespace NetDaemon.Service.App.CodeGeneration
             yield return ParseMethod(
                 $@"void {GetServiceMethodName(serviceName)}(this {entityTypeName} entity {(args is not null ? $", {args.GetParametersString()}" : string.Empty)})
             {{
-                entity.CallService(""{serviceName}""{(args is not null ? $", {args.GetParametersVariable()}" : string.Empty)});
+                entity.CallServiceTargeted(""{serviceName}""{(args is not null ? $", {args.GetParametersVariable()}" : string.Empty)});
             }}").ToPublic().ToStatic();
 
             if (args is not null)
@@ -63,7 +63,7 @@ namespace NetDaemon.Service.App.CodeGeneration
                 yield return ParseMethod(
                     $@"void {GetServiceMethodName(serviceName)}(this {entityTypeName} entity , {args.GetParametersDecomposedString()})
                 {{
-                    entity.CallService(""{serviceName}"", {args.GetParametersDecomposedVariable()});
+                    entity.CallServiceTargeted(""{serviceName}"", {args.GetParametersDecomposedVariable()});
                 }}").ToPublic().ToStatic();
             }
         }

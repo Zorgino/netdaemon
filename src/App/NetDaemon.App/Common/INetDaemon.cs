@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
+using JoySoftware.HomeAssistant.Model;
 
 namespace NetDaemon.Common
 {
@@ -64,5 +65,7 @@ namespace NetDaemon.Common
         ///     Access the underlying service provider for IOT access to services
         /// </summary>
         public IServiceProvider? ServiceProvider { get; }
+
+        void CallServiceTargeted(string domain, string service, HassTarget? target = null, object? data = null, bool waitForResponse = false);
     }
 }

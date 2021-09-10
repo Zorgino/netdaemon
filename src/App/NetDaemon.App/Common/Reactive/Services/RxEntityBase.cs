@@ -4,6 +4,7 @@ using System.Dynamic;
 using System.Globalization;
 using System.Linq;
 using System.Reactive.Linq;
+using JoySoftware.HomeAssistant.Model;
 
 namespace NetDaemon.Common.Reactive.Services
 {
@@ -81,6 +82,11 @@ namespace NetDaemon.Common.Reactive.Services
                 serviceData["entity_id"] = EntityId;
 
             DaemonRxApp.CallService(domain, service, serviceData);
+        }
+
+        public void CallServiceTargeted(string domain, string service, dynamic? data, bool waitForResponse = false)
+        {
+            DaemonRxApp.CallServiceTargeted(domain, service, new HassTarget() { EntityIds = new List<string>(EntityIds)}, data);
         }
     }
 

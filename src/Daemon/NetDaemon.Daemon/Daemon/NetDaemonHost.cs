@@ -211,7 +211,7 @@ namespace NetDaemon.Daemon
             }
         }
 
-        public void CallService(string domain, string service, HassTarget target, object? data = null, bool waitForResponse = false)
+        public void CallServiceTargeted(string domain, string service, HassTarget? target = null, object? data = null, bool waitForResponse = false)
         {
             var task = Client.CallService(domain, service, data!, target, waitForResponse);
 
