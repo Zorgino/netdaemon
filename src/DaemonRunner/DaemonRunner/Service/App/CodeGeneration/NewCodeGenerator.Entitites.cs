@@ -148,9 +148,9 @@ namespace NetDaemon.Service.App.CodeGeneration
             var baseClass = $"{typeof(RxEntityBase).FullName}<{entityClass}, {typeof(OldEntityState).FullName}<string, {attributesGeneric}>, string, {attributesGeneric}>";
 
             var (className, variableName) = GetNames<INetDaemonRxApp>();
-            var classDeclaration = $@"class {entityClass} : {typeof(RxEntityBase).FullName}
+            var classDeclaration = $@"class {entityClass} : {baseClass}
                                     {{
-                                            public {domain.ToPascalCase()}Entity({className} {variableName}, string entityId) : base({variableName}, new [] {{ entityId }})
+                                            public {domain.ToPascalCase()}Entity({className} {variableName}, params string[] entityIds) : base({variableName}, entityIds)
                                             {{
                                             }}
                                     }}";

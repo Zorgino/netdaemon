@@ -98,7 +98,7 @@ namespace NetDaemon.Common.Reactive.Services
     {
         private readonly Lazy<TAttributes?> _attributesLazy;
 
-        protected RxEntityBase(INetDaemonRxApp haContext, string entityId) : base(haContext, new [] { entityId })
+        protected RxEntityBase(INetDaemonRxApp haContext, params string [] entityId) : base(haContext, entityId )
         {
             _attributesLazy = new(() => EntityState?.AttributesJson.ToObject<TAttributes>());
         }

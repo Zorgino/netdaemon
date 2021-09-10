@@ -105,7 +105,7 @@ namespace NetDaemon.Service.App.CodeGeneration
                 yield return ParseMethod(
                     $@"void {GetServiceMethodName(serviceName)}({typeof(HassTarget).FullName} target {(argsParametersString is not null ? "," : "")} {argsParametersString})
                 {{
-                    {haContextVariableName}.CallService(""{domain}"", ""{serviceName}"", target {(serviceArguments is not null ? ", data" : string.Empty)});
+                    {haContextVariableName}.CallServiceTargeted(""{domain}"", ""{serviceName}"", target {(serviceArguments is not null ? ", data" : string.Empty)});
                 }}").ToPublic();
             }
             else
@@ -113,7 +113,7 @@ namespace NetDaemon.Service.App.CodeGeneration
                 yield return ParseMethod(
                     $@"void {GetServiceMethodName(serviceName)}({argsParametersString})
                 {{
-                    {haContextVariableName}.CallService(""{domain}"", ""{serviceName}"" {(serviceArguments is not null ? ", null" : "")} {(serviceArguments is not null ? ", data" : "")});
+                    {haContextVariableName}.CallServiceTargeted(""{domain}"", ""{serviceName}"" {(serviceArguments is not null ? ", null" : "")} {(serviceArguments is not null ? ", data" : "")});
                 }}").ToPublic();
             }
         }
