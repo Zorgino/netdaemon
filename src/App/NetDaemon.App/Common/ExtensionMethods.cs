@@ -1,3 +1,4 @@
+using System.Buffers;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Dynamic;
@@ -24,12 +25,29 @@ namespace NetDaemon.Common
             var attributes = new FluentExpandoObject(true, true);
             foreach (var (attribute, value) in attributeNameValuePairs)
             {
-                // We only add non-null values since the FluentExpandoObject will 
+                // We only add non-null values since the FluentExpandoObject will
                 // return null on missing anyway
                 attributes.Add(attribute, value);
             }
 
             return attributes;
+        }
+
+        public static T ToObject<T>(this JsonElement element, JsonSerializerOptions? options = null)
+        {
+            var bufferWriter = new ArrayBufferWriter<byte>();
+            using (var writer = new Utf8JsonWriter(bufferWriter))
+            {
+                element.WriteTo(writer);
+            }
+
+            return JsonSerializer.Deserialize<T>(bufferWriter.WrittenSpan, options) ?? default!;
+        }
+
+        public static (string Domain, string Entity) SplitEntityId(this string entityId)
+        {
+            var firstDot = entityId.IndexOf('.', System.StringComparison.InvariantCulture);
+            return (entityId[.. firstDot ], entityId[ firstDot .. ]);
         }
 
         /// <summary>

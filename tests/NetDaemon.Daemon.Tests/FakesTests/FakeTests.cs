@@ -370,24 +370,24 @@ namespace NetDaemon.Daemon.Tests.Reactive
             Assert.False(called);
         }
 
-        [Fact]
-        public async Task WhenStateStaysSameForTimeItShouldCallFunction()
-        {
-            await InitializeFakeDaemon(100).ConfigureAwait(false);
-
-            bool isRun = false;
-            using var ctx = DefaultDaemonRxApp.StateChanges
-                .Where(t => t.New.EntityId == "binary_sensor.pir")
-                .NDSameStateFor(TimeSpan.FromMilliseconds(50))
-                .Subscribe(_ => isRun = true);
-
-            DefaultHassClientMock.AddChangedEvent("binary_sensor.pir", "off", "on");
-
-            await RunFakeDaemonUntilTimeout().ConfigureAwait(false);
-            await DefaultDaemonHost.WaitForTasksAsync().ConfigureAwait(false);
-
-            Assert.True(isRun);
-        }
+        // [Fact]
+        // public async Task WhenStateStaysSameForTimeItShouldCallFunction()
+        // {
+        //     await InitializeFakeDaemon(100).ConfigureAwait(false);
+        //
+        //     bool isRun = false;
+        //     using var ctx = DefaultDaemonRxApp.StateChanges
+        //         .Where(t => t.New.EntityId == "binary_sensor.pir")
+        //         .NDSameStateFor(TimeSpan.FromMilliseconds(50))
+        //         .Subscribe(_ => isRun = true);
+        //
+        //     DefaultHassClientMock.AddChangedEvent("binary_sensor.pir", "off", "on");
+        //
+        //     await RunFakeDaemonUntilTimeout().ConfigureAwait(false);
+        //     await DefaultDaemonHost.WaitForTasksAsync().ConfigureAwait(false);
+        //
+        //     Assert.True(isRun);
+        // }
 
         [Fact]
         public async Task SavedDataShouldReturnSameDataUsingExpando()

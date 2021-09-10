@@ -64,6 +64,20 @@ namespace NetDaemon.Common
         public ReadOnlyCollection<string>? WhitelistExternalDirs { get; }
     }
 
+    public record EntityState<TState, TAttributes> : EntityState, IEntityProperties
+        where TAttributes : class
+    {
+        private readonly Lazy<TAttributes> _attributesLazy;
+
+        public EntityState(EntityState source) : base(source)
+        {
+            _attributesLazy = new (() => AttributesJson.ToObject<TAttributes>());
+        }
+
+        public new TState? State => base.State == null ? default : (TState?)Convert.ChangeType(base.State, typeof(TState), CultureInfo.InvariantCulture);
+        public override TAttributes Attribute => _attributesLazy.Value;
+    }
+
     /// <summary>
     ///     Detailed state information
     /// </summary>
@@ -77,7 +91,7 @@ namespace NetDaemon.Common
         /// <summary>
         ///     Attributes of the entity
         /// </summary>
-        public dynamic? Attribute { get; init; } = new FluentExpandoObject(true, true);
+        public virtual dynamic? Attribute { get; init; } = new FluentExpandoObject(true, true);
 
         /// <summary>
         ///     Unique id of the entity
@@ -103,6 +117,8 @@ namespace NetDaemon.Common
         /// Context
         /// </summary>
         public Context? Context { get; init; }
+
+        public JsonElement AttributesJson { get; set; }
 
         /// <summary>
         ///     returns a pretty print of EntityState

@@ -8,7 +8,9 @@ using System.Globalization;
 using System.Linq;
 using System.Reactive.Linq;
 using Microsoft.Reactive.Testing;
+using NetDaemon.Common.Reactive.Services;
 using Newtonsoft.Json;
+using EntityState = NetDaemon.Common.EntityState;
 
 namespace NetDaemon.Daemon.Fakes
 {
@@ -26,7 +28,7 @@ namespace NetDaemon.Daemon.Fakes
         /// <summary>
         ///     Observable fake states
         /// </summary>
-        public ObservableBase<(EntityState Old, EntityState New)> StateChangesObservable { get; }
+        public ObservableBase<StateChange> StateChangesObservable { get; }
 
         /// <summary>
         ///     Observable fake events
@@ -284,7 +286,7 @@ namespace NetDaemon.Daemon.Fakes
             {
                 try
                 {
-                    observer.OnNext((oldState, newState));
+                    observer.OnNext(new StateChange(oldState, newState));
                 }
                 catch (Exception e)
                 {

@@ -10,6 +10,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using NetDaemon.Common.Exceptions;
+using NetDaemon.Common.Reactive.Services;
 
 // For mocking
 [assembly: InternalsVisibleTo("DynamicProxyGenAssembly2")]
@@ -47,15 +48,15 @@ namespace NetDaemon.Common.Reactive
         public ObservableBase<RxEvent> EventChangesObservable => _eventObservables!;
 
         /// <inheritdoc/>
-        public IObservable<(EntityState Old, EntityState New)> StateAllChanges { get; }
+        public IObservable<StateChange> StateAllChanges { get; }
 
         /// <inheritdoc/>
-        public IObservable<(EntityState Old, EntityState New)> StateChanges => StateAllChanges.Where(e => e.New?.State != e.Old?.State);
+        public IObservable<StateChange> StateChanges => StateAllChanges.Where(e => e.New?.State != e.Old?.State);
 
         /// <summary>
         ///     Returns the observables states implementation of AppDaemonRxApps
         /// </summary>
-        public ObservableBase<(EntityState, EntityState)> StateChangesObservable => _stateObservables!;
+        public ObservableBase<StateChange> StateChangesObservable => _stateObservables!;
 
         /// <inheritdoc/>
         public IEnumerable<EntityState> States =>

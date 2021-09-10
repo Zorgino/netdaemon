@@ -1,12 +1,13 @@
 ﻿using System;
 using Microsoft.Extensions.Logging;
+using NetDaemon.Common.Reactive.Services;
 
 namespace NetDaemon.Common.Reactive
 {
     /// <summary>
     ///     Implements the observable interface for state changes
     /// </summary>
-    public class StateChangeObservable : ObservableBase<(EntityState, EntityState)>
+    public class StateChangeObservable : ObservableBase<StateChange>
     {
         /// <summary>
         ///     Constructor
@@ -62,7 +63,7 @@ namespace NetDaemon.Common.Reactive
     /// <summary>
     ///     Implements the IObservable state changes
     /// </summary>
-    public class ReactiveState : IObservable<(EntityState Old, EntityState New)>
+    public class ReactiveState : IObservable<StateChange>
     {
         private readonly NetDaemonRxApp _daemonRxApp;
 
@@ -79,7 +80,7 @@ namespace NetDaemon.Common.Reactive
         ///     Implements IObservable ReactivState
         /// </summary>
         /// <param name="observer">Observer</param>
-        public IDisposable Subscribe(IObserver<(EntityState, EntityState)> observer)
+        public IDisposable Subscribe(IObserver<StateChange> observer)
         {
             return _daemonRxApp.StateChangesObservable.Subscribe(observer);
         }

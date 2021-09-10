@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Dynamic;
+using System.Globalization;
 using System.Linq;
 using System.Reactive.Linq;
 using NetDaemon.Common.Exceptions;
+using NetDaemon.Common.Reactive.Services;
 
 namespace NetDaemon.Common.Reactive
 {
@@ -42,12 +44,12 @@ namespace NetDaemon.Common.Reactive
         /// <summary>
         ///     Observable, All state changes inkluding attributes
         /// </summary>
-        IObservable<(EntityState Old, EntityState New)> StateAllChanges { get; }
+        IObservable<StateChange> StateAllChanges { get; }
 
         /// <summary>
         ///     Observable, All state changes. New.State!=Old.State
         /// </summary>
-        IObservable<(EntityState Old, EntityState New)> StateChanges { get; }
+        IObservable<StateChange> StateChanges { get; }
 
         /// <summary>
         ///     Calls a service using current entity id/s and the entity domain
@@ -84,7 +86,7 @@ namespace NetDaemon.Common.Reactive
         }
 
         /// <inheritdoc/>
-        public IObservable<(EntityState Old, EntityState New)> StateAllChanges
+        public virtual IObservable<StateChange> StateAllChanges
         {
             get
             {
@@ -93,7 +95,7 @@ namespace NetDaemon.Common.Reactive
         }
 
         /// <inheritdoc/>
-        public IObservable<(EntityState Old, EntityState New)> StateChanges
+        public virtual IObservable<StateChange> StateChanges
         {
             get
             {

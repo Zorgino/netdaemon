@@ -30,6 +30,10 @@
     </PackageReference>
     <PackageReference Include="System.Reactive" Version="5.0.0" />
   </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Model3\NetDeamon.Model3\NetDaemon.Model3.csproj" />
+  </ItemGroup>
   <PropertyGroup>
     <CodeAnalysisRuleSet>..\..\..\.linting\roslynator.ruleset</CodeAnalysisRuleSet>
     <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>

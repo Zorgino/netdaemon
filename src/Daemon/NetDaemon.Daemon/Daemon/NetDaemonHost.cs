@@ -17,6 +17,7 @@ using Microsoft.Extensions.Logging;
 using NetDaemon.Common;
 using NetDaemon.Common.Exceptions;
 using NetDaemon.Common.Reactive;
+using NetDaemon.Common.Reactive.Services;
 using NetDaemon.Daemon.Storage;
 using NetDaemon.Infrastructure.Extensions;
 using NetDaemon.Infrastructure.ObservableHelpers;
@@ -813,7 +814,7 @@ namespace NetDaemon.Daemon
                     {
                         try
                         {
-                            observer.OnNext((oldState, newState));
+                            observer.OnNext(new StateChange(oldState, newState));
                         }
                         catch (Exception e)
                         {

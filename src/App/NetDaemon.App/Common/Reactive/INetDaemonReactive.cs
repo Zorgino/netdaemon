@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading;
+using NetDaemon.Common.Reactive.Services;
 
 namespace NetDaemon.Common.Reactive
 {
@@ -17,7 +18,7 @@ namespace NetDaemon.Common.Reactive
         /// <summary>
         ///     The observable statestream, all changes inkluding attributes
         /// </summary>
-        public IObservable<(EntityState Old, EntityState New)> StateAllChanges { get; }
+        public IObservable<StateChange> StateAllChanges { get; }
 
         /// <summary>
         ///     The observable statestream state change
@@ -25,7 +26,7 @@ namespace NetDaemon.Common.Reactive
         /// <remarks>
         ///     Old state != New state
         /// </remarks>
-        public IObservable<(EntityState Old, EntityState New)> StateChanges { get; }
+        public IObservable<StateChange> StateChanges { get; }
 
         /// <summary>
         ///     Enuberable of current states

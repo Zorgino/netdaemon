@@ -49,6 +49,8 @@ namespace NetDaemon.Mapping
             if (hassState.Attributes == null)
                 return;
 
+            entityState.AttributesJson = hassState.AttributesJson ?? new JsonElement();
+
             // Cast so we can work with the expando object
             if (entityState.Attribute is not IDictionary<string, object> dict)
                 throw new ArgumentNullException(nameof(entityState.Attribute), "Expando object should always be dictionary!");

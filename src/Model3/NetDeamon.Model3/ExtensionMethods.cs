@@ -6,7 +6,7 @@ namespace NetDaemon.Model3
     /// <summary>
     ///     Useful extension methods used
     /// </summary>
-    internal static class NetDaemonExtensions
+    public static class NetDaemonExtensionMethods
     {
         public static T ToObject<T>(this JsonElement element, JsonSerializerOptions? options = null)
         {
@@ -17,13 +17,13 @@ namespace NetDaemon.Model3
             }
 
             return JsonSerializer.Deserialize<T>(bufferWriter.WrittenSpan, options) ?? default!;
-        } 
+        }
 
         public static (string Domain, string Entity) SplitEntityId(this string entityId)
         {
             var firstDot = entityId.IndexOf('.', System.StringComparison.InvariantCulture);
             return (entityId[.. firstDot ], entityId[ firstDot .. ]);
         }
-     
+
     }
 }
