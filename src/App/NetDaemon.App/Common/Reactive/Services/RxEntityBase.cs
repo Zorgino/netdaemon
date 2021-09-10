@@ -84,9 +84,9 @@ namespace NetDaemon.Common.Reactive.Services
             DaemonRxApp.CallService(domain, service, serviceData);
         }
 
-        public void CallServiceTargeted(string domain, string service, dynamic? data, bool waitForResponse = false)
+        public void CallServiceTargeted(string service, dynamic? data = null, bool waitForResponse = false)
         {
-            DaemonRxApp.CallServiceTargeted(domain, service, new HassTarget() { EntityIds = new List<string>(EntityIds)}, data);
+            DaemonRxApp.CallServiceTargeted(EntityId.SplitEntityId().Domain, service, new HassTarget() { EntityIds = new List<string>(EntityIds)}, data);
         }
     }
 

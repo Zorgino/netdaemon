@@ -183,6 +183,6 @@ namespace NetDaemon.Common.Reactive
         /// <param name="action">Action to run</param>
         IDisposable RunIn(TimeSpan timespan, Action action);
 
-        void CallServiceTargeted(string domain, string service, HassTarget target, dynamic? data, bool waitForResponse = false);
+        void CallServiceTargeted(string domain, string service, HassTarget? target = null, dynamic? data = null, bool waitForResponse = false);
     }
 }

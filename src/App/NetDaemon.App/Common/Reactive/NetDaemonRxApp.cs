@@ -70,7 +70,7 @@ namespace NetDaemon.Common.Reactive
             Daemon.CallService(domain, service, data, waitForResponse);
         }
 
-        public void CallServiceTargeted(string domain, string service, HassTarget target, dynamic? data, bool waitForResponse = false)
+        public void CallServiceTargeted(string domain, string service, HassTarget? target = null, dynamic? data = null, bool waitForResponse = false)
         {
             _ = Daemon ?? throw new NetDaemonNullReferenceException($"{nameof(Daemon)} cant be null!");
             Daemon.CallServiceTargeted(domain, service, target, data);
