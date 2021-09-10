@@ -988,7 +988,7 @@ namespace NetDaemon.Daemon
                     }
                 }
 
-                if (applicationContext.ApplicationInstance is NetDaemonRxApp netDaemonRxApp)
+                if (applicationContext.ApplicationInstance is INetDaemonRxApp netDaemonRxApp)
                 {
                     await netDaemonRxApp.HandleAttributeInitialization(this).ConfigureAwait(false);
                     Logger.LogInformation("Successfully loaded app {appId} ({class})", applicationContext.Id,

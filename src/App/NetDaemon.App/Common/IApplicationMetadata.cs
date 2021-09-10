@@ -5,7 +5,7 @@ namespace NetDaemon.Common
     /// <summary>
     /// Provides metadata for a NetDaemon Application
     /// </summary>
-    internal interface IApplicationMetadata
+    public interface IApplicationMetadata
     {
         /// <summary>
         ///     Unique id of the application

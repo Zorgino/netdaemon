@@ -22,7 +22,7 @@ namespace NetDaemon.Common.Reactive
     /// <summary>
     ///     Base class for using the Reactive paradigm for apps
     /// </summary>
-    public class NetDaemonRxApp : NetDaemonAppBase, INetDaemonRxApp
+    public class NetDaemonRxApp : NetDaemonAppBase, INetDaemonRxApp, INetDaemonApp
     {
         private readonly CancellationTokenSource _cancelTimers;
         private EventObservable? _eventObservables;

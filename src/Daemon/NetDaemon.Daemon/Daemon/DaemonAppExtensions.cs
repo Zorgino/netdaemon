@@ -17,7 +17,7 @@ namespace NetDaemon.Daemon
 {
     public static class DaemonAppExtensions
     {
-        public static async Task HandleAttributeInitialization(this NetDaemonRxApp netDaemonApp, INetDaemon daemon)
+        public static async Task HandleAttributeInitialization(this INetDaemonRxApp netDaemonApp, INetDaemon daemon)
         {
             _ = daemon ??
                throw new NetDaemonArgumentNullException(nameof(daemon));
@@ -56,7 +56,7 @@ namespace NetDaemon.Daemon
         }
 
         [SuppressMessage("", "CA1031")]
-        private static async Task HandleServiceCallAttribute(INetDaemon _daemon, NetDaemonAppBase netDaemonApp, MethodInfo method, bool isAsync = true)
+        private static async Task HandleServiceCallAttribute(INetDaemon _daemon, INetDaemonRxApp netDaemonApp, MethodInfo method, bool isAsync = true)
         {
             var (signatureOk, err) = CheckIfServiceCallSignatureIsOk(method, isAsync);
             if (!signatureOk)
