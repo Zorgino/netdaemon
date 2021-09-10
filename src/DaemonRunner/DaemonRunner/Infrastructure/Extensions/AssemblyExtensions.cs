@@ -11,11 +11,12 @@ namespace NetDaemon.Infrastructure.Extensions
         public static IEnumerable<Type> GetAppClasses(this Assembly assembly)
         {
             return assembly.GetTypes()
-                .Where(type => type.IsClass && 
-                               !type.IsGenericType && 
-                               !type.IsAbstract && 
-                               (type.IsAssignableTo(typeof(INetDaemonAppBase)) || type.GetCustomAttribute<NetDaemonAppAttribute>() != null
-                               ));
+                .Where(type => type.IsClass &&
+                               !type.IsGenericType &&
+                               !type.IsAbstract &&
+                               (type.IsAssignableTo(typeof(INetDaemonAppBase)) || type.GetCustomAttribute<NetDaemonAppAttribute>() != null)
+                               && type.GetCustomAttribute<SkipAttribute>() == null
+                );
         }
     }
 }

@@ -14,6 +14,7 @@ using NetDaemon.Infrastructure.Config;
 using NetDaemon.Common.Exceptions;
 using System.Globalization;
 using System.Diagnostics.CodeAnalysis;
+using NetDaemon.Common.Reactive;
 using NetDaemon.Service.App.CodeGeneration;
 
 namespace NetDaemon
@@ -40,6 +41,7 @@ namespace NetDaemon
                     services.AddSingleton<ICodeGenerator, CodeGenerator>();
                     services.AddSingleton<IYamlConfigReader, YamlConfigReader>();
                     services.AddSingleton<IIoWrapper, IoWrapper>();
+                    services.AddSingleton<INetDaemonRxApp, NetDaemonRxApp>();
 
                     RegisterNetDaemonAssembly(services);
                 })
