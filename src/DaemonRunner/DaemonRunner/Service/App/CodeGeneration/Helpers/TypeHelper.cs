@@ -46,7 +46,6 @@ namespace NetDaemon.Service.App.CodeGeneration.Helpers
                 default: return defaultType;
             }
         }
-
         private static bool TryGetValueType(object obj, out Type valueType)
         {
             valueType = null!;

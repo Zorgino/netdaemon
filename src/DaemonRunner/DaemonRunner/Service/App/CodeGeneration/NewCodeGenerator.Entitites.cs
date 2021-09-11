@@ -90,19 +90,19 @@ namespace NetDaemon.Service.App.CodeGeneration
                 }
 
                 IEnumerable<(string Name, string TypeName, string SerializationName)> autoPropertiesParams = attributes
-                    .Select(a => (a.Key.ToNormalizedPascalCase(), a.Value.GetFriendlyName(), a.Key));
+                    .Select(a => (a.Key.ToNormalizedPascalCase() + a.Value.GetFriendlyName().ToNormalizedPascalCase(), a.Value.GetCompilableName() + "?", a.Key));
 
                 // handles the case when attributes have equal names in PascalCase but different types.
                 // i.e. available & Available convert to AvailableString & AvailableBool
 
-                autoPropertiesParams = autoPropertiesParams.HandleDuplicates(x => x.Name,
-                d => { d.Name = $"{d.Name}{d.TypeName.ToPascalCase()}".ToNormalizedPascalCase(); return d; });
-
-                // but when they are the same type, we cannot generate meaninguful name so just numerate them.
-                // TODO: come up with a meaningful name
-                var i = 1;
-                autoPropertiesParams = autoPropertiesParams.HandleDuplicates(x => x.Name,
-                    d => { d.Name += i++; return d; });
+                // autoPropertiesParams = autoPropertiesParams.HandleDuplicates(x => x.Name,
+                // d => { d.Name = $"{d.Name}{d.TypeName.ToPascalCase()}".ToNormalizedPascalCase(); return d; });
+                //
+                // // but when they are the same type, we cannot generate meaninguful name so just numerate them.
+                // // TODO: come up with a meaningful name
+                // var i = 1;
+                // autoPropertiesParams = autoPropertiesParams.HandleDuplicates(x => x.Name,
+                //     d => { d.Name += i++; return d; });
 
                 var autoProperties = autoPropertiesParams.Select(a =>
                     Property(a.TypeName, a.Name).ToPublic().WithAttribute<JsonPropertyNameAttribute>(a.SerializationName))

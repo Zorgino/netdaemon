@@ -15,7 +15,7 @@ namespace NetDaemon.Service.App.CodeGeneration
 
         public string? HaName { get; init; }
 
-        public string? TypeName => Type?.GetFriendlyName();
+        public string? TypeName => Type?.GetCompilableName();
 
         public string? ParameterTypeName => Required ? TypeName : $"{TypeName}?";
 
