@@ -72,7 +72,7 @@ namespace NetDaemon.Common.Reactive
         // /// <param name="waitForResponse">Waits for Home Assistant to return result before returning</param>
         // void CallService(string domain, string service, dynamic? data = null, bool waitForResponse = false);
 
-        void CallService(string domain, string service, Target? target = null, dynamic? data = null, bool waitForResponse = false);
+        void CallService(string domain, string service, Target? target = null, object? data = null, bool waitForResponse = false);
 
         /// <summary>
         ///     Calls service in Home Assistant

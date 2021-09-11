@@ -136,7 +136,7 @@ namespace NetDaemon.Common.Reactive
         /// <param name="service">Name of the service to call</param>
         /// <param name="data">Data to provide</param>
         /// <param name="waitForResponse">Waits for Home Assistant to return result before returning</param>
-        public void CallService(string service, dynamic? data = null, bool waitForResponse = false)
+        public void CallService(string service, object? data = null, bool waitForResponse = false)
         {
             if (EntityIds?.Any() != true)
                 return;
@@ -171,7 +171,7 @@ namespace NetDaemon.Common.Reactive
             DaemonRxApp.CallService(domain, service, new Target(EntityIds), data, waitForResponse);
         }
 
-        private void CallServiceOnEntity(string service, dynamic? attributes = null)
+        private void CallServiceOnEntity(string service, object? attributes = null)
         {
             if (EntityIds?.Any() != true)
                 return;
