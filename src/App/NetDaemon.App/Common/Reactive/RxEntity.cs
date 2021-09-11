@@ -23,23 +23,23 @@ namespace NetDaemon.Common.Reactive
         /// <param name="waitForResponse">Waits for Home Assistant to return result before returning</param>
         void SetState(dynamic state, dynamic? attributes = null, bool waitForResponse = false);
 
-        // /// <summary>
-        // ///     Toggles state on/off on entity
-        // /// </summary>
-        // /// <param name="attributes">The attributes to set. Use anonomous type</param>
-        // void Toggle(dynamic? attributes = null);
-        //
-        // /// <summary>
-        // ///     Turn off entity
-        // /// </summary>
-        // /// <param name="attributes">The attributes to set. Use anonomous type.</param>
-        // void TurnOff(dynamic? attributes = null);
-        //
-        // /// <summary>
-        // ///     Turn on entity
-        // /// </summary>
-        // /// <param name="attributes">The attributes to set. Use anonomous type.</param>
-        // void TurnOn(dynamic? attributes = null);
+        /// <summary>
+        ///     Toggles state on/off on entity
+        /// </summary>
+        /// <param name="attributes">The attributes to set. Use anonomous type</param>
+        void Toggle(dynamic? attributes = null);
+
+        /// <summary>
+        ///     Turn off entity
+        /// </summary>
+        /// <param name="attributes">The attributes to set. Use anonomous type.</param>
+        void TurnOff(dynamic? attributes = null);
+
+        /// <summary>
+        ///     Turn on entity
+        /// </summary>
+        /// <param name="attributes">The attributes to set. Use anonomous type.</param>
+        void TurnOn(dynamic? attributes = null);
 
         /// <summary>
         ///     Observable, All state changes inkluding attributes
@@ -112,14 +112,14 @@ namespace NetDaemon.Common.Reactive
             }
         }
 
-        // /// <inheritdoc/>
-        // public void Toggle(dynamic? attributes = null) => CallServiceOnEntity("toggle", attributes);
-        //
-        // /// <inheritdoc/>
-        // public void TurnOff(dynamic? attributes = null) => CallServiceOnEntity("turn_off", attributes);
-        //
-        // /// <inheritdoc/>
-        // public void TurnOn(dynamic? attributes = null) => CallServiceOnEntity("turn_on", attributes);
+        /// <inheritdoc/>
+        public void Toggle(dynamic? attributes = null) => CallServiceOnEntity("toggle", attributes);
+
+        /// <inheritdoc/>
+        public void TurnOff(dynamic? attributes = null) => CallServiceOnEntity("turn_off", attributes);
+
+        /// <inheritdoc/>
+        public void TurnOn(dynamic? attributes = null) => CallServiceOnEntity("turn_on", attributes);
 
         internal static string GetDomainFromEntity(string entity)
         {
@@ -141,31 +141,34 @@ namespace NetDaemon.Common.Reactive
             if (EntityIds?.Any() != true)
                 return;
 
-            foreach (var entityId in EntityIds!)
-            {
-                var serviceData = new FluentExpandoObject();
+            // foreach (var entityId in EntityIds!)
+            // {
+            //     var serviceData = new FluentExpandoObject();
+            //
+            //     if (data is ExpandoObject)
+            //     {
+            //         // Maske sure we make a copy since we reuse all info but entity id
+            //         serviceData.CopyFrom(data);
+            //     }
+            //     else if (data is not null)
+            //     {
+            //         // It is initialized with anonmous type new {transition=10} for example
+            //         var expObject = ((object)data).ToExpandoObject();
+            //         if (expObject is not null)
+            //         {
+            //             serviceData.CopyFrom(expObject);
+            //         }
+            //     }
+            //
+            //     var domain = GetDomainFromEntity(entityId);
+            //
+            //     serviceData["entity_id"] = entityId;
+            //
+            // }
 
-                if (data is ExpandoObject)
-                {
-                    // Maske sure we make a copy since we reuse all info but entity id
-                    serviceData.CopyFrom(data);
-                }
-                else if (data is not null)
-                {
-                    // It is initialized with anonmous type new {transition=10} for example
-                    var expObject = ((object)data).ToExpandoObject();
-                    if (expObject is not null)
-                    {
-                        serviceData.CopyFrom(expObject);
-                    }
-                }
+            var domain = GetDomainFromEntity(EntityIds.First());
 
-                var domain = GetDomainFromEntity(entityId);
-
-                serviceData["entity_id"] = entityId;
-
-                DaemonRxApp.CallService(domain, service, serviceData, waitForResponse);
-            }
+            DaemonRxApp.CallService(domain, service, new Target(EntityIds), data, waitForResponse);
         }
 
         private void CallServiceOnEntity(string service, dynamic? attributes = null)
@@ -173,32 +176,36 @@ namespace NetDaemon.Common.Reactive
             if (EntityIds?.Any() != true)
                 return;
 
-            dynamic? data = null;
+            // dynamic? data = null;
+            //
+            // if (attributes is not null)
+            // {
+            //     if (attributes is not IDictionary<string, object?>)
+            //         data = ((object)attributes).ToExpandoObject();
+            //     else
+            //         data = attributes;
+            // }
 
-            if (attributes is not null)
-            {
-                if (attributes is not IDictionary<string, object?>)
-                    data = ((object)attributes).ToExpandoObject();
-                else
-                    data = attributes;
-            }
+            // foreach (var entityId in EntityIds!)
+            // {
+            //     var serviceData = new FluentExpandoObject();
+            //
+            //     if (data is not null)
+            //     {
+            //         // Maske sure we make a copy since we reuse all info but entity id
+            //         serviceData.CopyFrom(data);
+            //     }
+            //
+            //     var domain = GetDomainFromEntity(entityId);
+            //
+            //     serviceData["entity_id"] = entityId;
+            //
+            //     DaemonRxApp.CallService(domain, service, serviceData);
+            // }
 
-            foreach (var entityId in EntityIds!)
-            {
-                var serviceData = new FluentExpandoObject();
+            var domain = GetDomainFromEntity(EntityIds.First());
 
-                if (data is not null)
-                {
-                    // Maske sure we make a copy since we reuse all info but entity id
-                    serviceData.CopyFrom(data);
-                }
-
-                var domain = GetDomainFromEntity(entityId);
-
-                serviceData["entity_id"] = entityId;
-
-                DaemonRxApp.CallService(domain, service, serviceData);
-            }
+            DaemonRxApp.CallService(domain, service, new Target(EntityIds), attributes);
         }
     }
 }

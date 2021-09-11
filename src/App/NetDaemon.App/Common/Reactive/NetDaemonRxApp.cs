@@ -63,14 +63,14 @@ namespace NetDaemon.Common.Reactive
         public IEnumerable<EntityState> States =>
             Daemon?.State ?? new List<EntityState>();
 
-        /// <inheritdoc/>
-        public void CallService(string domain, string service, dynamic? data = null, bool waitForResponse = false)
-        {
-            _ = Daemon ?? throw new NetDaemonNullReferenceException($"{nameof(Daemon)} cant be null!");
-            Daemon.CallService(domain, service, data, waitForResponse);
-        }
+        // /// <inheritdoc/>
+        // public void CallService(string domain, string service, dynamic? data = null, bool waitForResponse = false)
+        // {
+        //     _ = Daemon ?? throw new NetDaemonNullReferenceException($"{nameof(Daemon)} cant be null!");
+        //     Daemon.CallService(domain, service, data, waitForResponse);
+        // }
 
-        public void CallServiceTargeted(string domain, string service, Target? target = null, dynamic? data = null, bool waitForResponse = false)
+        public void CallService(string domain, string service, Target? target = null, dynamic? data = null, bool waitForResponse = false)
         {
             _ = Daemon ?? throw new NetDaemonNullReferenceException($"{nameof(Daemon)} cant be null!");
 

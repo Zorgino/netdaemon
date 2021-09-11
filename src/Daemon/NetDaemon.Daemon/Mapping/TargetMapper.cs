@@ -8,10 +8,8 @@ namespace NetDaemon.Mapping
 {
     public static class TargetMapper
     {
-        public static HassTarget? Map(this Target? target)
+        public static HassTarget Map(this Target target)
         {
-            if (target is null) return null;
-
             return new HassTarget
             {
                 EntityIds = target.EntityIds,

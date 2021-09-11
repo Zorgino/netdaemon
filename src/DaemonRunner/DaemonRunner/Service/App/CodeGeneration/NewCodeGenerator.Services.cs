@@ -106,7 +106,7 @@ namespace NetDaemon.Service.App.CodeGeneration
                 yield return ParseMethod(
                     $@"void {GetServiceMethodName(serviceName)}({typeof(Target).FullName} target {(argsParametersString is not null ? "," : "")} {argsParametersString})
                 {{
-                    {haContextVariableName}.{nameof(INetDaemonRxApp.CallServiceTargeted)}(""{domain}"", ""{serviceName}"", target {(serviceArguments is not null ? ", data" : string.Empty)});
+                    {haContextVariableName}.{nameof(INetDaemonRxApp.CallService)}(""{domain}"", ""{serviceName}"", target {(serviceArguments is not null ? ", data" : string.Empty)});
                 }}").ToPublic();
             }
             else
@@ -114,7 +114,7 @@ namespace NetDaemon.Service.App.CodeGeneration
                 yield return ParseMethod(
                     $@"void {GetServiceMethodName(serviceName)}({argsParametersString})
                 {{
-                    {haContextVariableName}.{nameof(INetDaemonRxApp.CallService)}(""{domain}"", ""{serviceName}"" {(serviceArguments is not null ? $", {serviceArguments.GetParametersVariable()}" : "")});
+                    {haContextVariableName}.{nameof(INetDaemonRxApp.CallService)}(""{domain}"", ""{serviceName}"" {(serviceArguments is not null ? ", null" : "")} {(serviceArguments is not null ? ", data" : "")});
                 }}").ToPublic();
             }
         }

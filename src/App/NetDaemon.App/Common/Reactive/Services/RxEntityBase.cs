@@ -66,27 +66,28 @@ namespace NetDaemon.Common.Reactive.Services
         /// <param name="sendEntityId">If true it will include the entity_id attribute with this entity's EntityId with the service call</param>
         protected void CallService(string domain, string service, dynamic? data = null, bool sendEntityId = false)
         {
-            var serviceData = new FluentExpandoObject();
-            if (data is ExpandoObject)
-            {
-                serviceData.CopyFrom(data);
-            }
-            else if (data is not null)
-            {
-                var expObject = ((object)data).ToExpandoObject();
-                if (expObject is not null)
-                    serviceData.CopyFrom(expObject);
-            }
+            // var serviceData = new FluentExpandoObject();
+            // if (data is ExpandoObject)
+            // {
+            //     serviceData.CopyFrom(data);
+            // }
+            // else if (data is not null)
+            // {
+            //     var expObject = ((object)data).ToExpandoObject();
+            //     if (expObject is not null)
+            //         serviceData.CopyFrom(expObject);
+            // }
 
+            Target? target = null;
             if (sendEntityId)
-                serviceData["entity_id"] = EntityId;
+                target = new Target(EntityId);
 
-            DaemonRxApp.CallService(domain, service, serviceData);
+            DaemonRxApp.CallService(domain, service, target, data);
         }
 
         public void CallService(string service, dynamic? data = null, bool waitForResponse = false)
         {
-            DaemonRxApp.CallServiceTargeted(EntityId.SplitEntityId().Domain, service, new Target(EntityIds), data);
+            DaemonRxApp.CallService(EntityId.SplitEntityId().Domain, service, new Target(EntityIds), data);
         }
     }
 

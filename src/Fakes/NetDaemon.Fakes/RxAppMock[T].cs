@@ -351,14 +351,19 @@ namespace NetDaemon.Daemon.Fakes
         /// <param name="service">Service to bee called</param>
         /// <param name="data">Data sent by service</param>
         /// <param name="times">Times checking</param>
-        public void VerifyCallService(string? domain = null, string? service = null, dynamic? data = null, Times? times = null)
-        {
-            var t = times ?? Times.Once();
-            domain ??= It.IsAny<string>();
-            service ??= It.IsAny<string>();
-            data ??= It.IsAny<object>();
-            Verify(x => x.CallService(domain, service, It.IsAny<object>(), It.IsAny<bool>()), t);
-        }
+        // public void VerifyCallService(string? domain = null, string? service = null, dynamic? data = null, Times? times = null)
+        // {
+        //     object? dataObj = data ?? null;
+        //     var timesCalled = times ?? Times.Once();
+        //
+        //     Verify(
+        //         x => x.CallService(
+        //             It.Is<string>(d => d != null && domain == null ? d.Length > 0 : d == domain)
+        //             , It.Is<string>(s => s != null && service == null ? s.Length > 0 : s == service)
+        //             , It.Is<object>(d => d != null && dataObj == null || d == dataObj)
+        //             , It.IsAny<bool>()),
+        //         timesCalled);
+        // }
 
         // /// <summary>
         // ///     Verifies that the Entity turned on

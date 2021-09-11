@@ -19,10 +19,10 @@ namespace NetDaemon.Common
             EntityIds = entityIds.ToList();
         }
 
-        public IReadOnlyCollection<string>? EntityIds { get; init; }
+        public IReadOnlyCollection<string>? EntityIds { get; init; } = new List<string>();
 
-        public IReadOnlyCollection<string>? DeviceIds { get; init; }
+        public IReadOnlyCollection<string>? DeviceIds { get; init; } = new List<string>();
 
-        public IReadOnlyCollection<string>? AreaIds { get; init; }
+        public IReadOnlyCollection<string>? AreaIds { get; init; } = new List<string>();
     }
 }

@@ -213,7 +213,7 @@ namespace NetDaemon.Daemon
 
         public void CallServiceTargeted(string domain, string service, Target? target = null, object? data = null, bool waitForResponse = false)
         {
-            var task = Client.CallService(domain, service, data!, target.Map(), waitForResponse);
+            var task = Client.CallService(domain, service, data!, target?.Map(), waitForResponse);
 
             if (!waitForResponse)
             {
