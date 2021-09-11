@@ -74,23 +74,24 @@ namespace NetDaemon.Service.App.CodeGeneration
         {
             foreach (var entityDomainGroups in entities.GroupBy(x => EntityIdHelper.GetDomain(x.EntityId)))
             {
-                var attributes = new Dictionary<string, Type>();
+                var attrs = new List<(string HaName, Type Type)>();
 
                 foreach (var entity in entityDomainGroups)
                 {
-                    foreach (var (attributeName, attributeObject) in new Dictionary<string, object>(entity.Attribute))
+                    foreach (var (attrHaName, attrObject) in new Dictionary<string, object>(entity.Attribute))
                     {
-                        if (attributes.ContainsKey(attributeName))
+                        var attrType = TypeHelper.GetType(attrObject);
+                        if (attrs.Any(attr => attr.HaName == attrHaName && attr.Type == attrType))
                         {
                             continue;
                         }
 
-                        attributes.Add(attributeName, TypeHelper.GetType(attributeObject));
+                        attrs.Add((attrHaName, attrType));
                     }
                 }
 
-                IEnumerable<(string Name, string TypeName, string SerializationName)> autoPropertiesParams = attributes
-                    .Select(a => (a.Key.ToNormalizedPascalCase() + a.Value.GetFriendlyName().ToNormalizedPascalCase(), a.Value.GetCompilableName() + "?", a.Key));
+                IEnumerable<(string Name, string TypeName, string SerializationName)> autoPropertiesParams = attrs
+                    .Select(a => (a.HaName.ToNormalizedPascalCase() + a.Type.GetFriendlyName().ToNormalizedPascalCase(), a.Type.GetCompilableName() + "?", a.HaName));
 
                 // handles the case when attributes have equal names in PascalCase but different types.
                 // i.e. available & Available convert to AvailableString & AvailableBool
