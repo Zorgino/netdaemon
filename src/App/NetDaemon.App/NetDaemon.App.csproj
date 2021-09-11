@@ -34,6 +34,32 @@
   <ItemGroup>
     <ProjectReference Include="..\..\Model3\NetDeamon.Model3\NetDaemon.Model3.csproj" />
   </ItemGroup>
+
+  <ItemGroup>
+    <Compile Remove="Common\Reactive\Services\GroupEntity.cs" />
+    <Compile Remove="Common\Reactive\Services\LockEntity.cs" />
+    <Compile Remove="Common\Reactive\Services\PersistentNotificationEntity.cs" />
+    <Compile Remove="Common\Reactive\Services\CoverEntity.cs" />
+    <Compile Remove="Common\Reactive\Services\SensorEntity.cs" />
+    <Compile Remove="Common\Reactive\Services\InputBooleanEntity.cs" />
+    <Compile Remove="Common\Reactive\Services\ZoneEntity.cs" />
+    <Compile Remove="Common\Reactive\Services\VacuumEntity.cs" />
+    <Compile Remove="Common\Reactive\Services\AutomationEntity.cs" />
+    <Compile Remove="Common\Reactive\Services\SwitchEntity.cs" />
+    <Compile Remove="Common\Reactive\Services\WeatherEntity.cs" />
+    <Compile Remove="Common\Reactive\Services\DeviceTrackerEntity.cs" />
+    <Compile Remove="Common\Reactive\Services\BinarySensorEntity.cs" />
+    <Compile Remove="Common\Reactive\Services\SunEntity.cs" />
+    <Compile Remove="Common\Reactive\Services\CameraEntity.cs" />
+    <Compile Remove="Common\Reactive\Services\ImageProcessingEntity.cs" />
+    <Compile Remove="Common\Reactive\Services\ClimateEntity.cs" />
+    <Compile Remove="Common\Reactive\Services\SceneEntity.cs" />
+    <Compile Remove="Common\Reactive\Services\PersonEntity.cs" />
+    <Compile Remove="Common\Reactive\Services\AlarmControlPanelEntity.cs" />
+    <Compile Remove="Common\Reactive\Services\MediaPlayerEntity.cs" />
+    <Compile Remove="Common\Reactive\Services\LightEntity.cs" />
+    <Compile Remove="Common\Reactive\Services\ScriptEntity.cs" />
+  </ItemGroup>
   <PropertyGroup>
     <CodeAnalysisRuleSet>..\..\..\.linting\roslynator.ruleset</CodeAnalysisRuleSet>
     <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
