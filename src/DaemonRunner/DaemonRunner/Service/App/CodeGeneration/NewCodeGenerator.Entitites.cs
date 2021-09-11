@@ -78,20 +78,20 @@ namespace NetDaemon.Service.App.CodeGeneration
 
                 foreach (var entity in entityDomainGroups)
                 {
-                    foreach (var (attrHaName, attrObject) in new Dictionary<string, object>(entity.Attribute))
+                    foreach (var (attrName, attrObject) in new Dictionary<string, object>(entity.Attribute))
                     {
                         var attrType = TypeHelper.GetType(attrObject);
-                        if (attrs.Any(attr => attr.HaName == attrHaName && attr.Type == attrType))
+                        if (attrs.Any(attr => attr.HaName == attrName /*&& attr.Type == attrType*/))
                         {
                             continue;
                         }
 
-                        attrs.Add((attrHaName, attrType));
+                        attrs.Add((attrName, attrType));
                     }
                 }
 
                 IEnumerable<(string Name, string TypeName, string SerializationName)> autoPropertiesParams = attrs
-                    .Select(a => (a.HaName.ToNormalizedPascalCase() + a.Type.GetFriendlyName().ToNormalizedPascalCase(), a.Type.GetCompilableName() + "?", a.HaName));
+                    .Select(a => (a.HaName.ToNormalizedPascalCase(), a.Type.GetCompilableName() + "?", a.HaName));
 
                 // handles the case when attributes have equal names in PascalCase but different types.
                 // i.e. available & Available convert to AvailableString & AvailableBool

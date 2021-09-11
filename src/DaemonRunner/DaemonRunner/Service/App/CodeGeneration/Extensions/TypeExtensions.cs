@@ -9,30 +9,28 @@ namespace NetDaemon.Service.App.CodeGeneration.Extensions
 {
     internal static class TypeExtensions
     {
-        private static readonly Dictionary<Type, string> _typeToAliasNames = new()
+        private static readonly Dictionary<Type, string> _buildInTypeToAliasNames = new()
         {
-            { typeof(int), "int" },
-            { typeof(uint), "uint" },
-            { typeof(long), "long" },
-            { typeof(ulong), "ulong" },
-            { typeof(float), "float" },
-            { typeof(double), "double" },
-            { typeof(object), "object" },
-            { typeof(bool), "bool" },
-            { typeof(string), "string" },
-            { typeof(int?), "int?" },
-            { typeof(uint?), "uint?" },
-            { typeof(long?), "long?" },
-            { typeof(ulong?), "ulong?" },
-            { typeof(float?), "float?" },
-            { typeof(double?), "double?" },
-            { typeof(bool?), "bool?" },
-            { typeof(void), "void" }
+            { typeof(int), "int"  },
+            { typeof(int?), "int" },
+            { typeof(long), "long"  },
+            { typeof(long?), "long" },
+            { typeof(float), "float"  },
+            { typeof(float?), "float" },
+            { typeof(double), "double"  },
+            { typeof(double?), "double" },
+            { typeof(bool), "bool"  },
+            { typeof(bool?), "bool" },
+            { typeof(string), "string"  },
+            { typeof(DateTime), "DateTime"  },
+            { typeof(DateTime?), "DateTime" },
+            { typeof(void), "void"  },
+            { typeof(object), "object"  },
         };
 
         public static string GetCompilableName(this Type type)
         {
-            if (_typeToAliasNames.TryGetValue(type, out var friendlyName))
+            if (_buildInTypeToAliasNames.TryGetValue(type, out var friendlyName))
             {
                 return friendlyName;
             }
@@ -63,33 +61,71 @@ namespace NetDaemon.Service.App.CodeGeneration.Extensions
             return friendlyName;
         }
 
-
-        private static readonly IReadOnlyCollection<(Type Type, string FriendlyName)> _typeToFriendlyNames = new List<(Type, string)>()
+        private static bool TryGetBuildInTypeFriendlyName(Type type, out string? name)
         {
-            ( typeof(int), "integer" ),
-            ( typeof(int?), "integer" ),
-            ( typeof(long), "long" ),
-            ( typeof(long?), "long" ),
-            ( typeof(float), "float" ),
-            ( typeof(float?), "float" ),
-            ( typeof(double), "double" ),
-            ( typeof(double?), "double" ),
-            ( typeof(bool), "bool" ),
-            ( typeof(bool?), "bool" ),
-            ( typeof(string), "string" ),
-            ( typeof(DateTime), "date" ),
-            ( typeof(DateTime?), "date" ),
-            ( typeof(void), "void" ),
-            ( typeof(IList), "list" ),
-            ( typeof(IDictionary), "dictionary" ),
-            ( typeof(object), "object" ),
-        };
+            name = null;
+
+            if (type == typeof(int) && type == typeof(int?))
+            {
+                name = "integer";
+            }
+            else if (type == typeof(DateTime) && type == typeof(DateTime?))
+            {
+                name = "date";
+            }
+            else if (_buildInTypeToAliasNames.TryGetValue(type, out var typeName))
+            {
+                name = typeName;
+            }
+            else if (type.Namespace is "System")
+            {
+                name = typeName;
+            }
+
+            return name is not null;
+        }
 
         public static string GetFriendlyName(this Type type)
         {
-            var entry = _typeToFriendlyNames.FirstOrDefault(x => x.Type.IsAssignableFrom(type));
+            if (TryGetBuildInTypeFriendlyName(type, out var buildInTypeName))
+            {
+                return buildInTypeName!;
+            }
 
-            return entry.FriendlyName;
+            if (TryGetCollectionFriendlyName(type, out var collectionTypeName))
+            {
+                return collectionTypeName!;
+            }
+
+            throw new ArgumentException("Unknown type", nameof(type));
+        }
+
+        private static bool TryGetCollectionFriendlyName(Type collectionType, out string? name)
+        {
+            name = null;
+            if (!collectionType.IsAssignableTo(typeof(IEnumerable)) && !collectionType.IsAssignableTo(typeof(IDictionary)))
+            {
+                return false;
+            }
+
+            string colllectionName;
+            string collectionGenericTypeName;
+
+            if (collectionType.IsAssignableTo(typeof(IDictionary)))
+            {
+                colllectionName = "Dictionary";
+                collectionGenericTypeName = $"{collectionType.GetGenericArguments()[0].GetFriendlyName()!.ToNormalizedPascalCase()}" +
+                                            $"{collectionType.GetGenericArguments()[1].GetFriendlyName()!.ToNormalizedPascalCase()}";
+            }
+            else
+            {
+                colllectionName = "List";
+                collectionGenericTypeName = $"{collectionType.GetGenericArguments()[0].GetFriendlyName()!.ToNormalizedPascalCase()}";
+            }
+
+            name = $"{colllectionName}Of{collectionGenericTypeName}";
+
+            return true;
         }
     }
 }
