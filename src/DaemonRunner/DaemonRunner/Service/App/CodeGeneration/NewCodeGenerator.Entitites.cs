@@ -78,21 +78,13 @@ namespace NetDaemon.Service.App.CodeGeneration
             {
                 var attributesTypeName = GetAttributesTypeName(entityDomainGroups.Key);
 
-                var attrs = new List<HaAttributeProperty>();
-
-                foreach (var entity in entityDomainGroups)
-                {
-                    var domainEntities = new Dictionary<string, object>(entity.Attribute);
-
-                    foreach (var (attrName, attrObject) in domainEntities)
-                    {
-                        var attrType = TypeHelper.GetType(attrObject);
-
-                        attrs.Add(new HaAttributeProperty(attrName, attrType));
-                    }
-                }
-
-                attrs = attrs.OrderBy(a => a.HaName).Distinct().ToList();
+                var attrs = entityDomainGroups
+                    .Select(es => new Dictionary<string, object>(es.Attribute))
+                    .SelectMany(x => x)
+                    .Select(x => new HaAttributeProperty(x.Key, TypeHelper.GetType(x.Value)))
+                    .OrderBy(a => a.HaName)
+                    .Distinct()
+                    .ToList();
 
                 var conflictingHaAttributes = GetConflicts(attrs).ToList();
 
