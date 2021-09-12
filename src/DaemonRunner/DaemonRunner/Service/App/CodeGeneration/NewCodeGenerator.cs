@@ -14,8 +14,11 @@ namespace NetDaemon.Service.App.CodeGeneration
     [SuppressMessage("ReSharper", "CoVariantArrayConversion")]
     public partial class NewCodeGenerator : ICodeGenerator
     {
+        private string? _nameSpace;
+
         public string? GenerateCodeRx(string nameSpace, IReadOnlyCollection<EntityState> entities, IReadOnlyCollection<HassServiceDomain> services)
         {
+            _nameSpace = nameSpace;
             var orderedEntities = entities.OrderBy(x => x.EntityId);
 
             var code = CompilationUnit()

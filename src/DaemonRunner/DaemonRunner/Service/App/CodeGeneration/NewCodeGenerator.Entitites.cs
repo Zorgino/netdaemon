@@ -17,7 +17,7 @@ namespace NetDaemon.Service.App.CodeGeneration
 {
     public partial class NewCodeGenerator
     {
-        private static IEnumerable<TypeDeclarationSyntax> GenerateEntityTypes(IEnumerable<OldEntityState> entities)
+        private IEnumerable<TypeDeclarationSyntax> GenerateEntityTypes(IEnumerable<OldEntityState> entities)
         {
             var entityIds = entities.Select(x => x.EntityId).ToList();
 
@@ -70,18 +70,23 @@ namespace NetDaemon.Service.App.CodeGeneration
             return ClassWithInjected<INetDaemonRxApp>("Entities").WithBase((string)"IEntities").AddMembers(properties).ToPublic();
         }
 
-        private static IEnumerable<TypeDeclarationSyntax> GenerateEntityAttributeRecords(IEnumerable<OldEntityState> entities)
+        private IEnumerable<TypeDeclarationSyntax> GenerateEntityAttributeRecords(IEnumerable<OldEntityState> entities)
         {
             foreach (var entityDomainGroups in entities.GroupBy(x => EntityIdHelper.GetDomain(x.EntityId)))
             {
+                var domain = entityDomainGroups.Key;
+                var attributesTypeName = GetAttributesTypeName(domain);
+
                 var attrs = new List<(string HaName, Type Type)>();
 
                 foreach (var entity in entityDomainGroups)
                 {
-                    foreach (var (attrName, attrObject) in new Dictionary<string, object>(entity.Attribute))
+                    var domainEntities = new Dictionary<string, object>(entity.Attribute);
+
+                    foreach (var (attrName, attrObject) in domainEntities)
                     {
                         var attrType = TypeHelper.GetType(attrObject);
-                        if (attrs.Any(attr => attr.HaName == attrName /*&& attr.Type == attrType*/))
+                        if (attrs.Any(attr => attr.HaName == attrName && attr.Type == attrType))
                         {
                             continue;
                         }
@@ -90,28 +95,40 @@ namespace NetDaemon.Service.App.CodeGeneration
                     }
                 }
 
+                // var conflicts = attrs.Duplicates(x => new { x.HaName, x.Type });
+                var sameNameButDifferentTypesConflicts = attrs
+                    .Duplicates(x => x.HaName.ToNormalizedPascalCase())
+                    .Where(nameDuplicates => nameDuplicates.GroupBy(x => x.Type).Count() > 1);
+
+                if (sameNameButDifferentTypesConflicts.Any())
+                {
+                    Console.WriteLine($@"""{domain}"" domain has attributes with same name but different types. To handle those, create:");
+
+                    Console.WriteLine($"using {_nameSpace} \n {{");
+                    Console.WriteLine($"public partial record {attributesTypeName} \n {{");
+
+                    foreach (var conflict in sameNameButDifferentTypesConflicts)
+                    {
+                        Console.WriteLine($"public [TYPE] {conflict.Key.ToNormalizedPascalCase()} {{get; set;}}");
+
+                    }
+
+                    attrs.RemoveAll(x => sameNameButDifferentTypesConflicts.Any(conflict => conflict.Key == x.HaName));
+                }
+
+                foreach (var conflict in sameNameButDifferentTypesConflicts)
+                {
+
+                }
+
                 IEnumerable<(string Name, string TypeName, string SerializationName)> autoPropertiesParams = attrs
                     .Select(a => (a.HaName.ToNormalizedPascalCase(), a.Type.GetCompilableName() + "?", a.HaName));
-
-                // handles the case when attributes have equal names in PascalCase but different types.
-                // i.e. available & Available convert to AvailableString & AvailableBool
-
-                // autoPropertiesParams = autoPropertiesParams.HandleDuplicates(x => x.Name,
-                // d => { d.Name = $"{d.Name}{d.TypeName.ToPascalCase()}".ToNormalizedPascalCase(); return d; });
-                //
-                // // but when they are the same type, we cannot generate meaninguful name so just numerate them.
-                // // TODO: come up with a meaningful name
-                // var i = 1;
-                // autoPropertiesParams = autoPropertiesParams.HandleDuplicates(x => x.Name,
-                //     d => { d.Name += i++; return d; });
 
                 var autoProperties = autoPropertiesParams.Select(a =>
                     Property(a.TypeName, a.Name).ToPublic().WithAttribute<JsonPropertyNameAttribute>(a.SerializationName))
                     .ToArray();
 
-                var domain = entityDomainGroups.Key;
-
-                yield return Record(GetAttributesTypeName(domain), autoProperties).ToPublic();
+                yield return Record(attributesTypeName, autoProperties).ToPublic();
             }
         }
 
