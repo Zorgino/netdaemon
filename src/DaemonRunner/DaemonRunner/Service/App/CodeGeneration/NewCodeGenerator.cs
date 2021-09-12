@@ -3,37 +3,43 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using JoySoftware.HomeAssistant.Model;
-using Microsoft.CodeAnalysis;
+using NetDaemon.Common;
 using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
-using EntityState = NetDaemon.Common.EntityState;
+using NetDaemon.Service.App.CodeGeneration.Extensions;
 
 [assembly: InternalsVisibleTo("NetDaemon.Daemon.Tests")]
 
 namespace NetDaemon.Service.App.CodeGeneration
 {
-    [SuppressMessage("ReSharper", "CoVariantArrayConversion")]
+    [SuppressMessage("", "CoVariantArrayConversion")]
     public partial class NewCodeGenerator : ICodeGenerator
     {
-        private string? _nameSpace;
+        private string _nameSpace = null!;
 
         public string? GenerateCodeRx(string nameSpace, IReadOnlyCollection<EntityState> entities, IReadOnlyCollection<HassServiceDomain> services)
         {
             _nameSpace = nameSpace;
+
+            // entities = entities.Where(x => x.EntityId.Contains("climate")).ToList();
+            // services = services.Where(x => x.Domain.Contains("climate")).ToList();
+
             var orderedEntities = entities.OrderBy(x => x.EntityId);
+            var orderedServices = services.OrderBy(x => x.Domain);
 
-            var code = CompilationUnit()
-                       .AddUsings(UsingDirective(ParseName("System")))
-                       .AddUsings(UsingDirective(ParseName("System.Collections.Generic")));
+            var generatedTypes =
+                GenerateEntityTypes(orderedEntities).Concat(
+                GenerateServiceTypes(services.OrderBy(x => x.Domain))).Concat(
+                GenerateExtensionMethodClasses(orderedServices, entities))
+                    .ToArray();
 
-           var namespaceDeclaration = NamespaceDeclaration(ParseName(nameSpace)).NormalizeWhitespace();
-
-           namespaceDeclaration = namespaceDeclaration.AddMembers(GenerateEntityTypes(orderedEntities).ToArray());
-           namespaceDeclaration = namespaceDeclaration.AddMembers(GenerateServiceTypes(services.OrderBy(x => x.Domain)).ToArray());
-           namespaceDeclaration = namespaceDeclaration.AddMembers(GenerateExtensionMethodClasses(services.OrderBy(x => x.Domain), entities).ToArray());
-
-            code = code.AddMembers(namespaceDeclaration);
-
-            return code.NormalizeWhitespace(Tab.ToString(), eol: "\n").ToFullString();
+            return CompilationUnit()
+                .AddUsings(
+                    "System",
+                    "System.Collections.Generic",
+                    $"{nameof(NetDaemon)}.{nameof(NetDaemon.Common)}")
+                .AddNamespace(nameSpace)
+                .AddMembers(generatedTypes)
+                .ToFullStringNormalized();
         }
     }
 }

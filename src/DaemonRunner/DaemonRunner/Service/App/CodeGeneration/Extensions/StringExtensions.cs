@@ -5,24 +5,28 @@ namespace NetDaemon.Service.App.CodeGeneration.Extensions
 {
     internal static class StringExtensions
     {
-        public static string ToNormalizedPascalCase(this string name, string prefix = "HA_")
+        public static string ToNormalizedPascalCase(this string name, string prefix = "")
         {
-            return name.ToPascalCase().ToNormalized(prefix);
+            return name.ToPascalCase().ToCompilable(prefix);
         }
 
-        public static string ToNormalizedCamelCase(this string name, string prefix = "HA_")
+        public static string ToNormalizedCamelCase(this string name, string prefix = "")
         {
-            return name.ToCamelCase().ToNormalized(prefix);
+            return name.ToCamelCase().ToCompilable(prefix);
         }
 
-        private static string ToNormalized(this string name, string prefix = "HA_")
+        public static string ToCompilable(this string name, string prefix = "")
         {
-            name = name.Replace(".", "_", StringComparison.InvariantCulture);
+            // name = name.Replace(".", "_", StringComparison.InvariantCulture);
 
             if (!char.IsLetter(name[0]) && name[0] != '_')
+            {
                 name = prefix + name;
+            }
 
-            return Regex.Replace(name, "[^a-zA-Z0-9]+", "", RegexOptions.Compiled);
+            var stringWithoutSpecialCharacters = Regex.Replace(name, @"[^a-zA-Z0-9_]+", "", RegexOptions.Compiled);
+
+            return stringWithoutSpecialCharacters;
         }
     }
 }

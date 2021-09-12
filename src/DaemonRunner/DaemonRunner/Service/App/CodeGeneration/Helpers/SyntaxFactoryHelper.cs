@@ -26,7 +26,12 @@ namespace NetDaemon.Service.App.CodeGeneration.Helpers
 
         public static PropertyDeclarationSyntax Property(string typeName, string propertyName, bool set = true)
         {
-            return ParseProperty($"{typeName} {propertyName} {{ get; {( set ? "set; " : string.Empty )}}}");
+            return ParseProperty($"{typeName} {propertyName} {{ get; {(set ? "set; " : string.Empty)}}}");
+        }
+
+        public static PropertyDeclarationSyntax PropertyComputed(string typeName, string propertyName, string computedString)
+        {
+            return ParseProperty($"{typeName} {propertyName} => {computedString};");
         }
 
         public static ClassDeclarationSyntax ClassWithInjected<TInjected>(string className)
@@ -68,6 +73,12 @@ namespace NetDaemon.Service.App.CodeGeneration.Helpers
             where T: MemberDeclarationSyntax
         {
             return (T)member.AddModifiers(Token(SyntaxKind.PublicKeyword));
+        }
+
+        public static T ToPrivate<T>(this T member)
+            where T: MemberDeclarationSyntax
+        {
+            return (T)member.AddModifiers(Token(SyntaxKind.PrivateKeyword));
         }
 
         public static T ToStatic<T>(this T member)

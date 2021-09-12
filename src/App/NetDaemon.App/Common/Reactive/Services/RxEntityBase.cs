@@ -97,18 +97,18 @@ namespace NetDaemon.Common.Reactive.Services
         where TAttributes : class
         where TState : class
     {
-        private readonly Lazy<TAttributes?> _attributesLazy;
+        // private readonly Lazy<TAttributes?> _attributesLazy;
 
         protected RxEntityBase(INetDaemonRxApp haContext, params string [] entityId) : base(haContext, entityId )
         {
-            _attributesLazy = new(() => EntityState?.AttributesJson.ToObject<TAttributes>());
+            // _attributesLazy = new(() => EntityState?.AttributesJson.ToObject<TAttributes>());
         }
 
         // We need a 'new' here because the normal type of State is string and we cannot overload string with eg double
         // TODO: smarter conversion of string to TState to take into account 'Unavalable' etc
         public override TState? State => base.State == null ? default : (TState?)Convert.ChangeType(base.State, typeof(TState), CultureInfo.InvariantCulture);
 
-        public override TAttributes? Attribute => _attributesLazy.Value;
+        public override TAttributes? Attribute => EntityState?.AttributesJson.ToObject<TAttributes>();
 
         public override TEntityState? EntityState => MapNullableState(base.EntityState);
 

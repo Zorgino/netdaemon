@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using NetDaemon.Common.Reactive;
@@ -77,7 +78,7 @@ namespace NetDaemon.Service.App.CodeGeneration
                 var domain = entityDomainGroups.Key;
                 var attributesTypeName = GetAttributesTypeName(domain);
 
-                var attrs = new List<(string HaName, Type Type)>();
+                var attrs = new List<AttributeName>();
 
                 foreach (var entity in entityDomainGroups)
                 {
@@ -86,51 +87,88 @@ namespace NetDaemon.Service.App.CodeGeneration
                     foreach (var (attrName, attrObject) in domainEntities)
                     {
                         var attrType = TypeHelper.GetType(attrObject);
-                        if (attrs.Any(attr => attr.HaName == attrName && attr.Type == attrType))
-                        {
-                            continue;
-                        }
 
-                        attrs.Add((attrName, attrType));
+                        attrs.Add(new AttributeName(attrName, attrType));
+
+                        // attrs.Add((attrName, attrName.ToNormalizedPascalCase(), attrType.GetCompilableName() + "?"));
                     }
                 }
 
-                // var conflicts = attrs.Duplicates(x => new { x.HaName, x.Type });
-                var sameNameButDifferentTypesConflicts = attrs
-                    .Duplicates(x => x.HaName.ToNormalizedPascalCase())
-                    .Where(nameDuplicates => nameDuplicates.GroupBy(x => x.Type).Count() > 1);
+                attrs = attrs.Distinct().ToList();
 
-                if (sameNameButDifferentTypesConflicts.Any())
+                // var conflicts = attrs.Duplicates(x => new { x.HaName, x.Type });
+                var conflictingHaNames = attrs
+                    .Duplicates(x => x.HaName)
+                    .Where(nameDuplicates => nameDuplicates.GroupBy(x => x.TypeName).Count() > 1)
+                    .Select(x => x.Key)
+                    .ToList();
+
+                var autoProperties = new List<PropertyDeclarationSyntax>();
+
+                if (conflictingHaNames.Any())
                 {
                     Console.WriteLine($@"""{domain}"" domain has attributes with same name but different types. To handle those, create:");
 
-                    Console.WriteLine($"using {_nameSpace} \n {{");
                     Console.WriteLine($"public partial record {attributesTypeName} \n {{");
 
-                    foreach (var conflict in sameNameButDifferentTypesConflicts)
+                    foreach (var conflictHaName in conflictingHaNames)
                     {
-                        Console.WriteLine($"public [TYPE] {conflict.Key.ToNormalizedPascalCase()} {{get; set;}}");
-
+                        Console.WriteLine($"public TYPE {conflictHaName.ToNormalizedPascalCase()} => (TYPE){"@_" + conflictHaName.ToCompilable()}");
                     }
 
-                    attrs.RemoveAll(x => sameNameButDifferentTypesConflicts.Any(conflict => conflict.Key == x.HaName));
+                    attrs.RemoveAll(x => conflictingHaNames.Any(conflict => conflict == x.HaName));
                 }
 
-                foreach (var conflict in sameNameButDifferentTypesConflicts)
-                {
+                //TODO: fix this trash
+                attrs.RemoveAll(x => attrs.Duplicates(y => y.HaName.ToNormalizedPascalCase()).ToList().Exists(z => z.Key == x.HaName.ToNormalizedPascalCase()));
 
-                }
+                autoProperties = attrs
+                    .ConvertAll(a => PropertyComputed(a.TypeName, a.PropName, $"{a.BackingPropName}.{nameof(Common.NetDaemonExtensions.ToObject)}<{a.TypeName}>()")
+                    .ToPublic());
 
-                IEnumerable<(string Name, string TypeName, string SerializationName)> autoPropertiesParams = attrs
-                    .Select(a => (a.HaName.ToNormalizedPascalCase(), a.Type.GetCompilableName() + "?", a.HaName));
-
-                var autoProperties = autoPropertiesParams.Select(a =>
-                    Property(a.TypeName, a.Name).ToPublic().WithAttribute<JsonPropertyNameAttribute>(a.SerializationName))
-                    .ToArray();
+                autoProperties.AddRange(attrs.ConvertAll(a => Property(typeof(JsonElement).FullName!, a.BackingPropName)
+                    .ToPublic()
+                    .WithAttribute<JsonPropertyNameAttribute>(a.HaName)));
 
                 yield return Record(attributesTypeName, autoProperties).ToPublic();
             }
         }
+
+        record AttributeName
+        {
+            public AttributeName()
+            {
+            }
+            public AttributeName(string haName, Type type)
+            {
+                HaName = haName;
+                Type = type;
+            }
+            public string HaName { get; set; }
+
+            public Type Type { get; set; }
+            public string TypeName => Type.GetCompilableName() + "?";
+            public string PropName => HaName.ToNormalizedPascalCase();
+
+            public string BackingPropName => "_" + HaName.ToCompilable();
+        }
+
+        // private class EntitiesAttributes
+        // {
+        //     private readonly IEnumerable<EntityAttributes> _entityAttributes;
+        //     public EntitiesAttributes(IEnumerable<OldEntityState> entities)
+        //     {
+        //     }
+        // }
+        //
+        // private class EntityAttributes
+        // {
+        //     private readonly Dictionary<string, object> _attributes;
+        //     public EntityAttributes(Dictionary<string, object> attributes)
+        //     {
+        //         _attributes = attributes;
+        //     }
+        // }
 
         private static TypeDeclarationSyntax GenerateEntityDomainType(string domain, IEnumerable<string> entities)
         {
@@ -152,7 +190,7 @@ namespace NetDaemon.Service.App.CodeGeneration
         {
             var entityName = EntityIdHelper.GetEntity(entityId);
 
-            var propertyCode = $@"{GetDomainEntityTypeName(domain)} {entityName.ToNormalizedPascalCase((string)"E_")} => new(_{GetNames<INetDaemonRxApp>().VariableName}, ""{entityId}"");";
+            var propertyCode = $@"{GetDomainEntityTypeName(domain)} {entityName.ToNormalizedPascalCase("E_")} => new(_{GetNames<INetDaemonRxApp>().VariableName}, ""{entityId}"");";
 
             return ParseProperty(propertyCode).ToPublic();
         }
