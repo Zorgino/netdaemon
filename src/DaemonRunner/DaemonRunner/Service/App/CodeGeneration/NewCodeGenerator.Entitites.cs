@@ -43,6 +43,11 @@ namespace NetDaemon.Service.App.CodeGeneration
             {
                 yield return attributeRecord;
             }
+
+            foreach (var attributeRecord in GenerateEntityAttributeRecords(entities))
+            {
+                yield return attributeRecord;
+            }
         }
         private static TypeDeclarationSyntax GenerateRootEntitiesInterface(IEnumerable<string> domains)
         {
@@ -72,48 +77,22 @@ namespace NetDaemon.Service.App.CodeGeneration
             return ClassWithInjected<INetDaemonRxApp>("Entities").WithBase((string)"IEntities").AddMembers(properties).ToPublic();
         }
 
-        // private IEnumerable<TypeDeclarationSyntax> GenerateEntityAttributeRecords(IEnumerable<OldEntityState> entities)
-        // {
-        //     foreach (var entity in entities)
-        //     {
-        //         var attributesTypeName = GetAttributesTypeName(entity);
-        //
-        //         var attrs =
-        //             new Dictionary<string, object>(entity.Attribute)
-        //             .Select(x => new HaAttributeProperty(x.Key, TypeHelper.GetType(x.Value)))
-        //             .OrderBy(a => a.HaName)
-        //             .Distinct()
-        //             .ToList();
-        //
-        //         var conflictingHaAttributes = GetConflicts(attrs).ToList();
-        //
-        //         var autoProperties = new List<PropertyDeclarationSyntax>();
-        //
-        //         autoProperties.AddRange(
-        //             attrs
-        //                 .Except(conflictingHaAttributes)
-        //                 .Select(a => a.GetProperty().ToPublic())
-        //         );
-        //
-        //         autoProperties.AddRange(
-        //             attrs
-        //                 .GroupBy(x => x.HaName)
-        //                 .Select(x => x.First().GetJsonElementProperty().ToPublic())
-        //         );
-        //
-        //         yield return Record(attributesTypeName, autoProperties).ToPublic().ToPartial();
-        //
-        //         if (conflictingHaAttributes.Count == 0)
-        //         {
-        //             continue;
-        //         }
-        //
-        //         var commentedProperties = conflictingHaAttributes.Select(x => "// public " + x.GetProperty().ToFullString()).ToArray();
-        //
-        //         yield return RecordCommented(attributesTypeName, commentedProperties).ToPublic().ToPartial();
-        //     }
-        // }
-        //
+        private IEnumerable<TypeDeclarationSyntax> GenerateEntityAttributeRecords(IEnumerable<OldEntityState> entities)
+        {
+            return entities.Select(x => GenerateEntityAttributeRecord(x, GetAttributesTypeName(x.EntityId)));
+        }
+
+        private TypeDeclarationSyntax GenerateEntityAttributeRecord(OldEntityState entity, string attributesTypeName)
+        {
+            var autoProperties = new Dictionary<string, object>(entity.Attribute)
+                .Select(x => new HaAttributeProperty(x.Key, TypeHelper.GetType(x.Value)))
+                .OrderBy(a => a.HaName)
+                .Distinct()
+                .Select(a => a.GetProperty().ToPublic());
+
+            return Record(attributesTypeName, autoProperties).ToPublic().ToPartial();
+        }
+
         private IEnumerable<TypeDeclarationSyntax> GenerateEntityDomainAttributeRecords(IEnumerable<OldEntityState> entities)
         {
             foreach (var entityDomainGroups in entities.GroupBy(x => EntityIdHelper.GetDomain(x.EntityId)))
