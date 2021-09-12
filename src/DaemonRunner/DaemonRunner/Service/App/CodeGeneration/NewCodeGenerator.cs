@@ -6,6 +6,7 @@ using JoySoftware.HomeAssistant.Model;
 using NetDaemon.Common;
 using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 using NetDaemon.Service.App.CodeGeneration.Extensions;
+using NetDaemon.Service.App.CodeGeneration.Helpers;
 
 [assembly: InternalsVisibleTo("NetDaemon.Daemon.Tests")]
 
@@ -14,14 +15,10 @@ namespace NetDaemon.Service.App.CodeGeneration
     [SuppressMessage("", "CoVariantArrayConversion")]
     public partial class NewCodeGenerator : ICodeGenerator
     {
-        private string _nameSpace = null!;
-
         public string? GenerateCodeRx(string nameSpace, IReadOnlyCollection<EntityState> entities, IReadOnlyCollection<HassServiceDomain> services)
         {
-            _nameSpace = nameSpace;
-
-            // entities = entities.Where(x => x.EntityId.Contains("climate")).ToList();
-            // services = services.Where(x => x.Domain.Contains("climate")).ToList();
+            entities = entities.Where(x => EntityIdHelper.GetDomain(x.EntityId) == "air_quality").ToList();
+            services = services.Where(x => x.Domain == "air_quality").ToList();
 
             var orderedEntities = entities.OrderBy(x => x.EntityId);
             var orderedServices = services.OrderBy(x => x.Domain);
@@ -37,8 +34,8 @@ namespace NetDaemon.Service.App.CodeGeneration
                     "System",
                     "System.Collections.Generic",
                     $"{nameof(NetDaemon)}.{nameof(NetDaemon.Common)}")
-                .AddNamespace(nameSpace)
-                .AddMembers(generatedTypes)
+                .AddNamespace(nameSpace, n
+                    => n.AddMembers(generatedTypes))
                 .ToFullStringNormalized();
         }
     }

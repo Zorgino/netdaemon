@@ -91,7 +91,19 @@ namespace NetDaemon.Common.Reactive.Services
         }
     }
 
-    public abstract class RxEntityBase<TEntity, TEntityState, TState, TAttributes> : RxEntityBase
+        public abstract class RxEntityBase<TAttributes> : RxEntityBase
+        where TAttributes : class
+    {
+
+        protected RxEntityBase(INetDaemonRxApp haContext, params string [] entityId) : base(haContext, entityId )
+        {
+        }
+
+        public override TAttributes? Attribute => EntityState?.AttributesJson.ToObject<TAttributes>();
+    }
+
+
+    public abstract class RxEntityBase<TEntity, TEntityState, TState, TAttributes> : RxEntityBase<TAttributes>
         where TEntity : RxEntityBase<TEntity, TEntityState, TState, TAttributes>
         where TEntityState : EntityState<TState, TAttributes>
         where TAttributes : class

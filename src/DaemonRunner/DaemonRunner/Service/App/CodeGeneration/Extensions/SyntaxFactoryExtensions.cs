@@ -30,12 +30,16 @@ namespace NetDaemon.Service.App.CodeGeneration.Extensions
             return syntax.AddUsings(usings.Select(u => UsingDirective(ParseName(u))).ToArray());
         }
 
-        public static CompilationUnitSyntax AddNamespace(this CompilationUnitSyntax syntax, string @namespace)
+        public static CompilationUnitSyntax AddNamespace(this CompilationUnitSyntax syntax, string @namespace, Func<NamespaceDeclarationSyntax, NamespaceDeclarationSyntax> action)
         {
             if (@namespace == null)
                 throw new ArgumentNullException(nameof(@namespace));
 
-            return syntax.AddMembers(NamespaceDeclaration(ParseName(@namespace)).NormalizeWhitespace());
+            var namespaceDeclarationSyntax = NamespaceDeclaration(ParseName(@namespace));
+
+            namespaceDeclarationSyntax = action(namespaceDeclarationSyntax);
+
+            return syntax.AddMembers(namespaceDeclarationSyntax).NormalizeWhitespace();
         }
 
         public static string ToFullStringNormalized(this CompilationUnitSyntax syntax)
