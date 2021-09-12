@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
@@ -34,6 +35,11 @@ namespace NetDaemon.Service.App.CodeGeneration.Helpers
             return ParseProperty($"{typeName} {propertyName} => {computedString};");
         }
 
+        public static SyntaxTriviaList ParseComments(params string[] text)
+        {
+            return TriviaList(text.Select(Comment));
+        }
+
         public static ClassDeclarationSyntax ClassWithInjected<TInjected>(string className)
         {
             var (typeName, variableName) = NamingHelper.GetNames<TInjected>();
@@ -61,12 +67,19 @@ namespace NetDaemon.Service.App.CodeGeneration.Helpers
             return InterfaceDeclaration(name);
         }
 
-        public static RecordDeclarationSyntax Record(string name, IEnumerable<PropertyDeclarationSyntax> properties)
+        public static RecordDeclarationSyntax Record(string name, IEnumerable<MemberDeclarationSyntax> properties)
         {
             return RecordDeclaration(Token(SyntaxKind.RecordKeyword), name)
                 .WithOpenBraceToken(Token(SyntaxKind.OpenBraceToken))
                 .AddMembers(properties.ToArray())
                 .WithCloseBraceToken(Token(SyntaxKind.CloseBraceToken));
+        }
+
+        public static RecordDeclarationSyntax RecordCommented(string name, params string[] comments)
+        {
+            return RecordDeclaration(Token(SyntaxKind.RecordKeyword), name)
+                .WithOpenBraceToken(Token(SyntaxKind.OpenBraceToken))
+                .WithCloseBraceToken(Token(ParseComments(comments), SyntaxKind.CloseBraceToken, TriviaList()));
         }
 
         public static T ToPublic<T>(this T member)
@@ -79,6 +92,12 @@ namespace NetDaemon.Service.App.CodeGeneration.Helpers
             where T: MemberDeclarationSyntax
         {
             return (T)member.AddModifiers(Token(SyntaxKind.PrivateKeyword));
+        }
+
+        public static T ToPartial<T>(this T member)
+            where T: MemberDeclarationSyntax
+        {
+            return (T)member.AddModifiers(Token(SyntaxKind.PartialKeyword));
         }
 
         public static T ToStatic<T>(this T member)

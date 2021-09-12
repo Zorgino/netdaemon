@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using NetDaemon.Common.Reactive;
 using NetDaemon.Common.Reactive.Services;
@@ -75,8 +76,7 @@ namespace NetDaemon.Service.App.CodeGeneration
         {
             foreach (var entityDomainGroups in entities.GroupBy(x => EntityIdHelper.GetDomain(x.EntityId)))
             {
-                var domain = entityDomainGroups.Key;
-                var attributesTypeName = GetAttributesTypeName(domain);
+                var attributesTypeName = GetAttributesTypeName(entityDomainGroups.Key);
 
                 var attrs = new List<HaAttributeProperty>();
 
@@ -92,48 +92,60 @@ namespace NetDaemon.Service.App.CodeGeneration
                     }
                 }
 
-                attrs = attrs.Distinct().ToList();
+                attrs = attrs.OrderBy(a => a.HaName).Distinct().ToList();
 
-                var conflictingHaNames = attrs
-                    .Duplicates(x => x.HaName)
-                    .Where(nameDuplicates => nameDuplicates.GroupBy(x => x.TypeName).Count() > 1)
-                    .Select(x => x.Key)
-                    .ToList();
+                var conflictingHaAttributes = GetConflicts(attrs).ToList();
 
                 var autoProperties = new List<PropertyDeclarationSyntax>();
 
-                if (conflictingHaNames.Any())
-                {
-                    Console.WriteLine($@"""{domain}"" domain has attributes with same name but different types. To handle those, create:");
-
-                    Console.WriteLine($"public partial record {attributesTypeName} \n {{");
-
-                    foreach (var conflictHaName in conflictingHaNames)
-                    {
-                        Console.WriteLine($"public TYPE {conflictHaName.ToNormalizedPascalCase()} => (TYPE){"@_" + conflictHaName.ToCompilable()}");
-                    }
-
-                    attrs.RemoveAll(x => conflictingHaNames.Any(conflict => conflict == x.HaName));
-                }
-
-                //TODO: fix this trash
-                attrs.RemoveAll(x => attrs.Duplicates(y => y.HaName.ToNormalizedPascalCase()).ToList().Exists(z => z.Key == x.HaName.ToNormalizedPascalCase()));
-
-                attrs = attrs.OrderBy(a => a.HaName).ToList();
-
                 autoProperties.AddRange(
-                    attrs.OrderBy(a => a.PropName)
-                    .Select(a => PropertyComputed(a.TypeName, a.PropName, $"{a.BackingPropName}.{nameof(Common.NetDaemonExtensions.ToObject)}<{a.TypeName}>()")
-                    .ToPublic()));
+                    attrs
+                    .Except(conflictingHaAttributes)
+                    .Select(a => PropertyComputed(a.TypeName,
+                        a.PropName,
+                        $"{a.BackingPropName}.{nameof(Common.NetDaemonExtensions.ToObject)}<{a.TypeName}>()").ToPublic()
+                    )
+                );
 
                 autoProperties.AddRange(
                     attrs
-                    .Select(a => Property(typeof(JsonElement).FullName!, a.BackingPropName)
-                    .ToPublic()
-                    .WithAttribute<JsonPropertyNameAttribute>(a.HaName)));
+                    .GroupBy(x => x.HaName)
+                    .Select(x => x.First())
+                    .Select(a => Property(typeof(JsonElement).FullName!,
+                        a.BackingPropName).ToPublic().WithAttribute<JsonPropertyNameAttribute>(a.HaName))
+                );
 
-                yield return Record(attributesTypeName, autoProperties).ToPublic();
+                yield return Record(attributesTypeName, autoProperties).ToPublic().ToPartial();
+
+                if (conflictingHaAttributes.Count == 0)
+                {
+                    continue;
+                }
+
+                var commentedProperties = conflictingHaAttributes.Select(x => "// public " + x.GetProperty.ToFullString()).ToArray();
+
+                yield return RecordCommented(attributesTypeName, commentedProperties).ToPublic().ToPartial();
             }
+        }
+
+        private static IEnumerable<HaAttributeProperty> GetConflicts(IEnumerable<HaAttributeProperty> attrs)
+        {
+            var result = new List<HaAttributeProperty>();
+
+            result.AddRange(
+            attrs
+                .Duplicates(x => x.HaName)
+                .Where(nameDuplicates => nameDuplicates.GroupBy(x => x.TypeName).Count() > 1)
+                .SelectMany(x => x)
+            );
+
+            result.AddRange(
+                attrs
+                    .Duplicates(x => x.PropName)
+                    .SelectMany(x => x)
+                );
+
+            return result.Distinct();
         }
 
         record HaAttributeProperty
@@ -156,6 +168,11 @@ namespace NetDaemon.Service.App.CodeGeneration
             public string PropName => HaName.ToNormalizedPascalCase();
 
             public string BackingPropName => "_" + HaName.ToCompilable();
+
+            public  PropertyDeclarationSyntax GetProperty => PropertyComputed(TypeName,
+                PropName,
+                $"{BackingPropName}.{nameof(Common.NetDaemonExtensions.ToObject)}<{TypeName}>()");
+
         }
 
         // private class EntitiesAttributes
