@@ -39,7 +39,7 @@ namespace NetDaemon.Service.App.CodeGeneration
                 yield return GenerateEntityType(entityDomain);
             }
 
-            foreach (var attributeRecord in GenerateEntityAttributeRecords(entities))
+            foreach (var attributeRecord in GenerateEntityDomainAttributeRecords(entities))
             {
                 yield return attributeRecord;
             }
@@ -72,7 +72,7 @@ namespace NetDaemon.Service.App.CodeGeneration
             return ClassWithInjected<INetDaemonRxApp>("Entities").WithBase((string)"IEntities").AddMembers(properties).ToPublic();
         }
 
-        private IEnumerable<TypeDeclarationSyntax> GenerateEntityAttributeRecords(IEnumerable<OldEntityState> entities)
+        private IEnumerable<TypeDeclarationSyntax> GenerateEntityDomainAttributeRecords(IEnumerable<OldEntityState> entities)
         {
             foreach (var entityDomainGroups in entities.GroupBy(x => EntityIdHelper.GetDomain(x.EntityId)))
             {
@@ -93,18 +93,13 @@ namespace NetDaemon.Service.App.CodeGeneration
                 autoProperties.AddRange(
                     attrs
                     .Except(conflictingHaAttributes)
-                    .Select(a => PropertyComputed(a.TypeName,
-                        a.PropName,
-                        $"{a.BackingPropName}.{nameof(Common.NetDaemonExtensions.ToObject)}<{a.TypeName}>()").ToPublic()
-                    )
+                    .Select(a => a.GetProperty().ToPublic())
                 );
 
                 autoProperties.AddRange(
                     attrs
                     .GroupBy(x => x.HaName)
-                    .Select(x => x.First())
-                    .Select(a => Property(typeof(JsonElement).FullName!,
-                        a.BackingPropName).ToPublic().WithAttribute<JsonPropertyNameAttribute>(a.HaName))
+                    .Select(x => x.First().GetJsonElementProperty().ToPublic())
                 );
 
                 yield return Record(attributesTypeName, autoProperties).ToPublic().ToPartial();
@@ -114,7 +109,7 @@ namespace NetDaemon.Service.App.CodeGeneration
                     continue;
                 }
 
-                var commentedProperties = conflictingHaAttributes.Select(x => "// public " + x.GetProperty.ToFullString()).ToArray();
+                var commentedProperties = conflictingHaAttributes.Select(x => "// public " + x.GetProperty().ToFullString()).ToArray();
 
                 yield return RecordCommented(attributesTypeName, commentedProperties).ToPublic().ToPartial();
             }
@@ -161,9 +156,12 @@ namespace NetDaemon.Service.App.CodeGeneration
 
             public string BackingPropName => "_" + HaName.ToCompilable();
 
-            public  PropertyDeclarationSyntax GetProperty => PropertyComputed(TypeName,
+            public  PropertyDeclarationSyntax GetProperty() => PropertyComputed(TypeName,
                 PropName,
                 $"{BackingPropName}.{nameof(Common.NetDaemonExtensions.ToObject)}<{TypeName}>()");
+
+            public PropertyDeclarationSyntax GetJsonElementProperty() => Property(typeof(JsonElement).FullName!,
+                BackingPropName).WithAttribute<JsonPropertyNameAttribute>(HaName);
 
         }
 
