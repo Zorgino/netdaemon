@@ -78,7 +78,7 @@ namespace NetDaemon.Service.App.CodeGeneration
                 var domain = entityDomainGroups.Key;
                 var attributesTypeName = GetAttributesTypeName(domain);
 
-                var attrs = new List<AttributeName>();
+                var attrs = new List<HaAttributeProperty>();
 
                 foreach (var entity in entityDomainGroups)
                 {
@@ -88,15 +88,12 @@ namespace NetDaemon.Service.App.CodeGeneration
                     {
                         var attrType = TypeHelper.GetType(attrObject);
 
-                        attrs.Add(new AttributeName(attrName, attrType));
-
-                        // attrs.Add((attrName, attrName.ToNormalizedPascalCase(), attrType.GetCompilableName() + "?"));
+                        attrs.Add(new HaAttributeProperty(attrName, attrType));
                     }
                 }
 
                 attrs = attrs.Distinct().ToList();
 
-                // var conflicts = attrs.Duplicates(x => new { x.HaName, x.Type });
                 var conflictingHaNames = attrs
                     .Duplicates(x => x.HaName)
                     .Where(nameDuplicates => nameDuplicates.GroupBy(x => x.TypeName).Count() > 1)
@@ -122,11 +119,16 @@ namespace NetDaemon.Service.App.CodeGeneration
                 //TODO: fix this trash
                 attrs.RemoveAll(x => attrs.Duplicates(y => y.HaName.ToNormalizedPascalCase()).ToList().Exists(z => z.Key == x.HaName.ToNormalizedPascalCase()));
 
-                autoProperties = attrs
-                    .ConvertAll(a => PropertyComputed(a.TypeName, a.PropName, $"{a.BackingPropName}.{nameof(Common.NetDaemonExtensions.ToObject)}<{a.TypeName}>()")
-                    .ToPublic());
+                attrs = attrs.OrderBy(a => a.HaName).ToList();
 
-                autoProperties.AddRange(attrs.ConvertAll(a => Property(typeof(JsonElement).FullName!, a.BackingPropName)
+                autoProperties.AddRange(
+                    attrs.OrderBy(a => a.PropName)
+                    .Select(a => PropertyComputed(a.TypeName, a.PropName, $"{a.BackingPropName}.{nameof(Common.NetDaemonExtensions.ToObject)}<{a.TypeName}>()")
+                    .ToPublic()));
+
+                autoProperties.AddRange(
+                    attrs
+                    .Select(a => Property(typeof(JsonElement).FullName!, a.BackingPropName)
                     .ToPublic()
                     .WithAttribute<JsonPropertyNameAttribute>(a.HaName)));
 
@@ -134,20 +136,23 @@ namespace NetDaemon.Service.App.CodeGeneration
             }
         }
 
-        record AttributeName
+        record HaAttributeProperty
         {
-            public AttributeName()
+            public HaAttributeProperty()
             {
             }
-            public AttributeName(string haName, Type type)
+            public HaAttributeProperty(string haName, Type type)
             {
                 HaName = haName;
                 Type = type;
             }
+
             public string HaName { get; set; }
 
             public Type Type { get; set; }
+
             public string TypeName => Type.GetCompilableName() + "?";
+
             public string PropName => HaName.ToNormalizedPascalCase();
 
             public string BackingPropName => "_" + HaName.ToCompilable();
