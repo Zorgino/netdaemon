@@ -1,23 +1,25 @@
 ﻿namespace NetDaemon.Common.Reactive.States
 {
-    public class NumericState : StateValueObject<double?>
+    public sealed class NumericState : StateObject<double?>
     {
         public NumericState(string? state) : base(state)
         {
         }
 
-        // protected double? Value
-        // {
-        //     get
-        //     {
-        //         if (double.TryParse(State, out var result))
-        //         {
-        //             return null;
-        //         }
-        //
-        //         return result;
-        //     }
-        // }
+        public override double? Value
+        {
+            get
+            {
+                if (double.TryParse(State, out var result))
+                {
+                    return result;
+                }
+
+                return null;
+            }
+        }
+
+        public override bool IsMissing => base.IsMissing || Value is null;
 
         public static implicit operator double(NumericState state)
         {

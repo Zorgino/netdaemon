@@ -22,6 +22,11 @@ namespace NetDaemon.Service.App.CodeGeneration
             return null;
         }
 
+        protected virtual Type? GetEntityStateType(string domain)
+        {
+            return null;
+        }
+
         private IEnumerable<TypeDeclarationSyntax> GenerateEntityTypes(IEnumerable<IEntityProperties> entities)
         {
             var entityIds = entities.Select(x => x.EntityId).ToList();

@@ -1,6 +1,6 @@
 ﻿namespace NetDaemon.Common.Reactive.States
 {
-    public class MediaPlayerState : OnOffState
+    public sealed class MediaPlayerState : OnOffState
     {
         public MediaPlayerState(string? state) : base(state)
         {

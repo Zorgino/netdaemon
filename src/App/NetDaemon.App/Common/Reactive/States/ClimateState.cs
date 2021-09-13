@@ -1,7 +1,7 @@
 ﻿using System;
 namespace NetDaemon.Common.Reactive.States
 {
-    public class ClimateState : OnOffState
+    public sealed class ClimateState : StateObject
     {
         public ClimateState(string? state) : base(state)
         {
@@ -13,9 +13,10 @@ namespace NetDaemon.Common.Reactive.States
 
         public bool IsFan => State is "fan";
 
-        protected override bool? ConvertToValue()
-        {
-            return IsHeating || IsCooling || IsFan || State is "on";
-        }
+        public bool IsOn => State is "on" || IsHeating || IsCooling || IsFan;
+
+        public bool IsOff => State is "off";
+
+        public override bool IsMissing => base.IsMissing || !(IsOn || IsOff);
     }
 }
