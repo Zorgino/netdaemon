@@ -15,6 +15,8 @@ namespace NetDaemon.Service.App.CodeGeneration
     [SuppressMessage("", "CoVariantArrayConversion")]
     public partial class NewCodeGenerator : ICodeGenerator
     {
+        //entities.GroupBy(x => EntityIdHelper.GetDomain(x.EntityId), x => x.State?.ToString(), (s, objects) => new {KEy = s, VAlues = objects.Distinct()}).Select(x => $@"{x.KEy}: [{string.Join(" ,", x.VAlues)}]")
+
         public string? GenerateCodeRx(string nameSpace, IReadOnlyCollection<EntityState> entities, IReadOnlyCollection<HassServiceDomain> services)
         {
             entities = entities.Where(x => EntityIdHelper.GetDomain(x.EntityId) == "climate").ToList();

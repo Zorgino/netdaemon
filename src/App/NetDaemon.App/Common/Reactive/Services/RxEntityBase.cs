@@ -46,7 +46,7 @@ namespace NetDaemon.Common.Reactive.Services
         /// <summary>
         /// Gets the entity's state
         /// </summary>
-        public virtual dynamic? State => DaemonRxApp?.State(EntityId)?.State;
+        public virtual object? State => DaemonRxApp?.State(EntityId)?.State;
 
         /// <summary>
         /// Representing an AlarmControlPanel entity.
@@ -118,7 +118,7 @@ namespace NetDaemon.Common.Reactive.Services
 
         // We need a 'new' here because the normal type of State is string and we cannot overload string with eg double
         // TODO: smarter conversion of string to TState to take into account 'Unavalable' etc
-        public override TState? State => base.State == null ? default : (TState?)Convert.ChangeType(base.State, typeof(TState), CultureInfo.InvariantCulture);
+        public override TState? State => (TState?)Activator.CreateInstance(typeof(TState), base.State?.ToString());
 
         public override TAttributes? Attribute => EntityState?.AttributesJson.ToObject<TAttributes>();
 

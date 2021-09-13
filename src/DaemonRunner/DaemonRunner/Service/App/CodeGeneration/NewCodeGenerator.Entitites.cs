@@ -5,6 +5,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using NetDaemon.Common;
 using NetDaemon.Common.Reactive;
 using NetDaemon.Common.Reactive.Services;
+using NetDaemon.Common.Reactive.States;
 using NetDaemon.Daemon.Config;
 using NetDaemon.Service.App.CodeGeneration.Extensions;
 using NetDaemon.Service.App.CodeGeneration.Helpers;
@@ -213,51 +214,6 @@ namespace NetDaemon.Service.App.CodeGeneration
 
             return mainRecords.Concat(partialCommentedRecords).Select(t => t.ToPublic().ToPartial());
         }
-
-        // private class EntityAttributes
-        // {
-        //     private Dictionary<string, object> _attributesDictionary;
-        //
-        //     public EntityAttributes()
-        //     {
-        //     }
-        //
-        //     public IEnumerable<RecordDeclarationSyntax> GetRecords()
-        //     {
-        //         var attrs = _attributesDictionary
-        //             .Select(x => new HaAttributeProperty(x.Key, TypeHelper.GetType(x.Value)))
-        //             .OrderBy(a => a.HaName)
-        //             .Distinct()
-        //             .ToList();
-        //
-        //         var conflictingHaAttributes = GetConflicts(attrs).ToList();
-        //
-        //         var autoProperties = new List<PropertyDeclarationSyntax>();
-        //
-        //         autoProperties.AddRange(
-        //             attrs
-        //                 .Except(conflictingHaAttributes)
-        //                 .Select(a => a.GetComputedProperty().ToPublic())
-        //         );
-        //
-        //         autoProperties.AddRange(
-        //             attrs
-        //                 .GroupBy(x => x.HaName)
-        //                 .Select(x => x.First().GetJsonElementProperty().ToPublic())
-        //         );
-        //
-        //         yield return Record(attributesTypeName, autoProperties).ToPublic().ToPartial();
-        //
-        //         if (conflictingHaAttributes.Count == 0)
-        //         {
-        //             continue;
-        //         }
-        //
-        //         var commentedProperties = conflictingHaAttributes.Select(x => "// public " + x.GetComputedProperty().ToFullString()).ToArray();
-        //
-        //         yield return RecordCommented(attributesTypeName, commentedProperties).ToPublic().ToPartial();
-        //     }
-        // }
 
         private static IEnumerable<HaAttributeProperty> GetConflicts(IEnumerable<HaAttributeProperty> attrs)
         {
