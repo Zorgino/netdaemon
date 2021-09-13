@@ -14,9 +14,9 @@ namespace NetDaemon.Service.App.CodeGeneration.Helpers
 
         public static string GetAttributesTypeName(string prefix)
         {
-            var normalizedEntityId = prefix.ToNormalizedPascalCase();
+            var normalizedPrefix = prefix.ToNormalizedPascalCase();
 
-            return $"{normalizedEntityId}Attributes";
+            return $"{normalizedPrefix}Attributes";
         }
 
         public static string GetDomainEntityTypeName(string prefix)

@@ -17,7 +17,7 @@ namespace NetDaemon.Service.App.CodeGeneration.Extensions
 
         public static string ToCompilable(this string name, string prefix = "")
         {
-            // name = name.Replace(".", "_", StringComparison.InvariantCulture);
+            name = name.Replace(".", "_", StringComparison.InvariantCulture);
 
             if (!char.IsLetter(name[0]) && name[0] != '_')
             {

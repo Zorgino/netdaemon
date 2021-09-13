@@ -40,7 +40,7 @@ namespace NetDaemon.Service.App.CodeGeneration.Helpers
             return TriviaList(text.Select(Comment));
         }
 
-        public static ClassDeclarationSyntax ClassWithInjected<TInjected>(string className)
+        public static ClassDeclarationSyntax ClassWithInjected<TInjected>(string className, bool @base = false)
         {
             var (typeName, variableName) = NamingHelper.GetNames<TInjected>();
 
@@ -48,7 +48,7 @@ namespace NetDaemon.Service.App.CodeGeneration.Helpers
                           {{
                               private readonly {typeName} _{variableName};
 
-                              public {className}( {typeName} {variableName})
+                              public {className}( {typeName} {variableName}) {(@base ? $": base({variableName})" : null)}
                               {{
                                   _{variableName} = {variableName};
                               }}

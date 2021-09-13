@@ -3,6 +3,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using NetDaemon.Daemon;
+using NetDaemon.Generated.Reactive.Services;
 namespace NetDaemon.Service.App.CodeGeneration
 {
     public class CodeGenerationHandler : ICodeGenerationHandler
@@ -33,7 +34,7 @@ namespace NetDaemon.Service.App.CodeGeneration
             var entityIds = daemonHost.State.Distinct().ToList();
 
             var sourceRx = _codeGenerator.GenerateCodeRx(
-                    "NetDaemon.Generated.Reactive.Services",
+                    typeof(Entities<>).Namespace!,
                     entityIds,
                     services.ToList()
             );
