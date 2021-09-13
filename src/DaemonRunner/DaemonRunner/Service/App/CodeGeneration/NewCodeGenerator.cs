@@ -17,8 +17,8 @@ namespace NetDaemon.Service.App.CodeGeneration
     {
         public string? GenerateCodeRx(string nameSpace, IReadOnlyCollection<EntityState> entities, IReadOnlyCollection<HassServiceDomain> services)
         {
-            entities = entities.Where(x => EntityIdHelper.GetDomain(x.EntityId) == "climate").ToList();
-            services = services.Where(x => x.Domain == "climate").ToList();
+            // entities = entities.Where(x => EntityIdHelper.GetDomain(x.EntityId) == "climate").ToList();
+            // services = services.Where(x => x.Domain == "climate").ToList();
 
             var orderedEntities = entities.OrderBy(x => x.EntityId);
             var orderedServices = services.OrderBy(x => x.Domain);

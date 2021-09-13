@@ -90,6 +90,16 @@ namespace NetDaemon.Service.App.CodeGeneration.Extensions
 
         public static Type ToTypeCanBeImplicitlyConvertedTo(this Type type)
         {
+            if (type == typeof(long))
+            {
+                return typeof(double);
+            }
+
+            if (type == typeof(long?))
+            {
+                return typeof(double?);
+            }
+
             return type;
         }
 

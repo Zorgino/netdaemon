@@ -106,7 +106,7 @@ namespace NetDaemon.Service.App.CodeGeneration
                 var attrs = entityDomainGroups
                     .Select(es => new Dictionary<string, object>(es.Attribute))
                     .SelectMany(x => x)
-                    .Select(x => new HaAttributeProperty(x.Key, x.Value.GetTypeByValues()))
+                    .Select(x => new HaAttributeProperty(x.Key, x.Value.GetTypeByValues().ToTypeCanBeImplicitlyConvertedTo()))
                     .OrderBy(a => a.HaName)
                     .Distinct()
                     .ToList();
