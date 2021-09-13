@@ -13,8 +13,9 @@ namespace NetDaemon.Common.Reactive.States
 
         public bool IsFan => State is "fan";
 
-        public override bool IsOn => base.IsOn || IsCooling || IsHeating || IsFan;
-
-        public override bool IsMissing => base.IsMissing || !IsOn;
+        protected override bool? ConvertToValue()
+        {
+            return IsHeating || IsCooling || IsFan || State is "on";
+        }
     }
 }

@@ -1,20 +1,24 @@
 ﻿using System;
 namespace NetDaemon.Common.Reactive.States
 {
-    public abstract class ValueObject<T>
+    public abstract class StateValueObject<T>
     {
-        private readonly string? _state;
+        private readonly Lazy<T> _lazyValue;
 
-        protected ValueObject(string? state)
+        protected string? State { get; }
+
+        protected StateValueObject(string? state)
         {
-            _state = state;
+            State = state;
+
+            _lazyValue = new Lazy<T>(ConvertToValue);
         }
 
-        protected virtual T? ConvertFrom(string state)
+        protected virtual T? ConvertToValue()
         {
             try
             {
-                return (T)Convert.ChangeType(state, typeof(T));
+                return (T)Convert.ChangeType(State, typeof(T));
             }
             catch
             {
@@ -22,9 +26,13 @@ namespace NetDaemon.Common.Reactive.States
             }
         }
 
-        public virtual bool IsMissing => _state is null or "unavailable" or "unknown";
+        public virtual bool IsMissing => State is null || IsUnavailable || IsUnknown;
 
-        public T? Value => IsMissing ? default : ConvertFrom(_state);
+        public bool IsUnavailable => State is "unavailable";
+
+        public bool IsUnknown => State is "unknown";
+
+        public T? Value => _lazyValue.Value;
 
         // public static implicit operator string(ValueObject<T> state)
         // {
