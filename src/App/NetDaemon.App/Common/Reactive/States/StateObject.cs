@@ -7,7 +7,7 @@ namespace NetDaemon.Common.Reactive.States
 
         protected StateObject(string? state)
         {
-            State = state;
+            State = state?.ToLowerInvariant();
         }
 
         public virtual bool Missing => State is null || Unavailable || Unknown;

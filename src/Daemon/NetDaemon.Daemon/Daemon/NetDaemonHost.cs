@@ -157,8 +157,8 @@ namespace NetDaemon.Daemon
 
         public IEnumerable<INetDaemonAppBase> AllAppInstances => InternalAllAppInstances.Values.Select(c => c.ApplicationInstance).OfType<INetDaemonAppBase>();
 
-        private IEnumerable<NetDaemonRxApp> NetDaemonRxApps =>
-            InternalRunningAppInstances.Values.Select(c => c.ApplicationInstance).OfType<NetDaemonRxApp>();
+        private IEnumerable<INetDaemonApp> NetDaemonRxApps =>
+            InternalRunningAppInstances.Values.Select(c => c.ApplicationInstance).OfType<INetDaemonApp>();
 
         private IEnumerable<IObserver<RxEvent>>? EventChangeObservers =>
             NetDaemonRxApps.SelectMany(app => ((EventObservable)app.EventChangesObservable).Observers);
