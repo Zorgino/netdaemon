@@ -39,35 +39,52 @@ namespace NetDaemon.Service.App.CodeGeneration
             var serviceTypeDeclaration = Class(GetEntityDomainExtensionMethodClassName(domain)).ToPublic().ToStatic();
 
             var serviceMethodDeclarations = services
-                .SelectMany(service => GenerateExtensionMethod(domain, service))
+                .SelectMany(service => GenerateExtensionMethods(domain, service))
+                .Select(ext => ext.ToPublic().ToStatic())
                 .ToArray();
 
             return serviceTypeDeclaration.AddMembers(serviceMethodDeclarations);
         }
 
-        private static IEnumerable<MemberDeclarationSyntax> GenerateExtensionMethod(string domain, HassService service)
+        private static IEnumerable<GlobalStatementSyntax> GenerateExtensionMethods(string domain, HassService service)
         {
             var serviceName = service.Service!;
 
             var args = GetServiceArguments(domain, service);
 
             var entityTypeName = GetDomainEntityTypeName(domain);
+            var entityVar = "entity";
 
-            yield return ParseMethod(
-                $@"void {GetServiceMethodName(serviceName)}<T>(this {entityTypeName}<T> entity {(args is not null ? $", {args.GetParametersString()}" : string.Empty)})
-                            where T : class
-            {{
-                entity.{nameof(RxEntityBase.CallService)}(""{serviceName}""{(args is not null ? $", {args.GetParametersVariable()}" : string.Empty)});
-            }}").ToPublic().ToStatic();
+            var serviceMethodName = GetServiceMethodName(serviceName);
+            var callServiceName = nameof(RxEntityBase.CallService);
 
-            if (args is not null)
+            if (args.HasArguments)
             {
                 yield return ParseMethod(
-                    $@"void {GetServiceMethodName(serviceName)}<T>(this {entityTypeName}<T> entity , {args.GetParametersDecomposedString()})
+                    $@"void {serviceMethodName}<T>(this {entityTypeName}<T> {entityVar}, {args.GetParametersString()})
                             where T : class
-                {{
-                    entity.{nameof(RxEntityBase.CallService)}(""{serviceName}"", {args.GetParametersDecomposedVariable()});
-                }}").ToPublic().ToStatic();
+                        {{
+                            {entityVar}.{callServiceName}(""{serviceName}"", {args.GetParametersVariable()});
+                        }}");
+
+                if (args.ContainIllegalHaName)
+                {
+                    yield return ParseMethod(
+                        $@"void {serviceMethodName}<T>(this {entityTypeName}<T> {entityVar} , {args.GetParametersDecomposedString()})
+                            where T : class
+                            {{
+                                {entityVar}.{callServiceName}(""{serviceName}"", {args.GetParametersDecomposedVariable()});
+                            }}");
+                }
+            }
+            else
+            {
+                yield return ParseMethod(
+                    $@"void {serviceMethodName}<T>(this {entityTypeName}<T> {entityVar})
+                            where T : class
+                        {{
+                            {entityVar}.{callServiceName}(""{serviceName}"");
+                        }}");
             }
         }
     }

@@ -101,37 +101,69 @@ namespace NetDaemon.Service.App.CodeGeneration
         {
             var serviceName = service.Service!;
 
-            var serviceArguments = GetServiceArguments(domain, service);
-            var haContextVariableName = GetVariableName<INetDaemonRxApp>("_");
+            var args = GetServiceArguments(domain, service);
+            var fieldVar = GetVariableName<INetDaemonRxApp>("_");
 
-            var argsParametersString = serviceArguments is not null ? $"{serviceArguments.TypeName} data {(serviceArguments.HasRequiredArguments ? "" : "= null")}" : null ;
+            var dataVar = args.GetParametersVariable();
+            var argsParametersString = args.HasArguments ? $"{args.TypeName} {(args.HasRequiredArguments ? dataVar : $"? {dataVar} = null")}" : null ;
+
+            var serviceMethodName = GetServiceMethodName(serviceName);
 
             if (service.Target is not null)
             {
-                yield return ParseMethod(
-                    $@"void {GetServiceMethodName(serviceName)}({typeof(Target).FullName} target {(argsParametersString is not null ? "," : "")} {argsParametersString})
-                {{
-                    {haContextVariableName}.{nameof(INetDaemonRxApp.CallService)}(""{domain}"", ""{serviceName}"", target {(serviceArguments is not null ? ", data" : string.Empty)});
-                }}").ToPublic();
+                var (targetClass, targetVar) = GetNames<Target>();
+
+                if (args.HasArguments)
+                {
+                    yield return ParseMethod(
+                        $@"void {serviceMethodName}({targetClass} {targetVar}, {argsParametersString})
+                            {{
+                                {fieldVar}.{nameof(INetDaemonRxApp.CallService)}(""{domain}"", ""{serviceName}"", {targetVar}, {dataVar});
+                            }}").ToPublic();
+
+                    if (!args.ContainIllegalHaName)
+                    {
+                        yield return ParseMethod(
+                            $@"void {serviceMethodName}({targetClass} {targetVar}, {args?.GetParametersDecomposedString()})
+                                {{
+                                    {fieldVar}.{nameof(INetDaemonRxApp.CallService)}(""{domain}"", ""{serviceName}"", {targetVar}, {args?.GetParametersDecomposedVariable()});
+                                }}").ToPublic();
+                    }
+                }
+                else
+                {
+                    yield return ParseMethod(
+                        $@"void {serviceMethodName}({targetClass} {targetVar})
+                            {{
+                                {fieldVar}.{nameof(INetDaemonRxApp.CallService)}(""{domain}"", ""{serviceName}"", {targetVar});
+                            }}").ToPublic();
+                }
             }
             else
             {
-                yield return ParseMethod(
-                    $@"void {GetServiceMethodName(serviceName)}({argsParametersString})
-                {{
-                    {haContextVariableName}.{nameof(INetDaemonRxApp.CallService)}(""{domain}"", ""{serviceName}"" {(serviceArguments is not null ? ", null" : "")} {(serviceArguments is not null ? ", data" : "")});
-                }}").ToPublic();
+                if (args!.HasArguments)
+                {
+                    yield return ParseMethod(
+                        $@"void {serviceMethodName}({argsParametersString})
+                                {{
+                                    {fieldVar}.{nameof(INetDaemonRxApp.CallService)}(""{domain}"", ""{serviceName}"", null, {dataVar});
+                                }}").ToPublic();
+
+                    if (!args.ContainIllegalHaName)
+                    {
+                        yield return ParseMethod(
+                            $@"void {serviceMethodName}({args.GetParametersDecomposedString()})
+                                {{
+                                    {fieldVar}.{nameof(INetDaemonRxApp.CallService)}(""{domain}"", ""{serviceName}"", null, {args.GetParametersDecomposedVariable()});
+                                }}").ToPublic();
+                    }
+                }
             }
         }
 
-        private static ServiceArguments? GetServiceArguments(string domain, HassService service)
+        private static ServiceArguments GetServiceArguments(string domain, HassService service)
         {
-            if (service.Fields is null || service.Fields.Count == 0)
-            {
-                return null;
-            }
-
-            return new ServiceArguments(domain, service.Service!, service.Fields);
+            return new(domain, service.Service!, service.Fields);
         }
     }
 }

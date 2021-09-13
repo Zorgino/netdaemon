@@ -1,10 +1,13 @@
 ﻿using System;
+using System.Text.RegularExpressions;
 using NetDaemon.Daemon.Config;
 using NetDaemon.Service.App.CodeGeneration.Extensions;
 namespace NetDaemon.Service.App.CodeGeneration.Helpers
 {
     internal static class NamingHelper
     {
+        internal static Regex IllegalCharactersRegex = new (@"[^a-zA-Z0-9_]+", RegexOptions.Compiled);
+
         public static string GetEntitiesTypeName(string prefix)
         {
             var normalizedDomain = prefix.ToNormalizedPascalCase();

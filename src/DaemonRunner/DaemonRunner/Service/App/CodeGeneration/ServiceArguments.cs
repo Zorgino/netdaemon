@@ -38,9 +38,13 @@ namespace NetDaemon.Service.App.CodeGeneration
             Arguments = serviceFields.Select(HassServiceArgumentMapper.Map);
         }
 
-        public IEnumerable<ServiceArgument> Arguments { get; }
+        public bool HasArguments => Arguments.Any();
 
-        public bool HasRequiredArguments => Arguments.Any(v => v.Required);
+        public IEnumerable<ServiceArgument> Arguments { get; } = new List<ServiceArgument>();
+
+        public bool HasRequiredArguments => Arguments.Any(a => a.Required);
+
+        public bool ContainIllegalHaName => Arguments.Any(a => NamingHelper.IllegalCharactersRegex.IsMatch(a.HaName));
 
         public string TypeName => NamingHelper.GetServiceArgumentsTypeName(_domain, _serviceName);
 

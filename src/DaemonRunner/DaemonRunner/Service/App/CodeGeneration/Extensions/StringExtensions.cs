@@ -1,6 +1,7 @@
-﻿using System;
-using System.Text.RegularExpressions;
+﻿using System.Text.RegularExpressions;
 using NetDaemon.Daemon.Config;
+using NetDaemon.Service.App.CodeGeneration.Helpers;
+
 namespace NetDaemon.Service.App.CodeGeneration.Extensions
 {
     internal static class StringExtensions
@@ -24,9 +25,7 @@ namespace NetDaemon.Service.App.CodeGeneration.Extensions
                 name = prefix + name;
             }
 
-            var stringWithoutSpecialCharacters = Regex.Replace(name, @"[^a-zA-Z0-9_]+", "", RegexOptions.Compiled);
-
-            return stringWithoutSpecialCharacters;
+            return NamingHelper.IllegalCharactersRegex.Replace(name, "");
         }
     }
 }
