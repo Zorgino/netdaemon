@@ -247,11 +247,10 @@ namespace NetDaemon.Service.App.CodeGeneration
 
         private TypeDeclarationSyntax GenerateEntitiesType(string domain, IEnumerable<string> entityIds)
         {
-            var baseClass = $"{GetDomainEntityTypeName(domain)}<{GetAttributesTypeName(domain)}>";
-            var entityClass = ClassWithInjected<INetDaemonRxApp>(GetEntitiesTypeName(domain), true)
+            var entityClass = ClassWithInjected<INetDaemonRxApp>(GetEntitiesTypeName(domain), true, entityIds)
                 .ToPublic()
                 .ToPartial()
-                .WithBase($"Entities<{baseClass}>");
+                .WithBase(GetDomainEntityTypeName(domain));
 
             var entityProperty = entityIds.Select(entityId => GenerateEntityProperty(entityId, domain)).ToArray();
 

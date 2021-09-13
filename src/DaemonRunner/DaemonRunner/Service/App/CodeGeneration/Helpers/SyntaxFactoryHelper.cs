@@ -45,15 +45,33 @@ namespace NetDaemon.Service.App.CodeGeneration.Helpers
             return TriviaList(text.Select(Comment));
         }
 
-        public static ClassDeclarationSyntax ClassWithInjected<TInjected>(string className, bool @base = false)
+        public static ClassDeclarationSyntax ClassWithInjected<TInjected>(string className, bool passInjected = false, IEnumerable<string>? baseParams = null)
         {
             var (typeName, variableName) = NamingHelper.GetNames<TInjected>();
+
+            string? baseString = null;
+
+            baseParams = baseParams?.Select(x => $@"""{x}""");
+
+            if (passInjected)
+            {
+                baseString = baseParams?.Any() == true
+                    ? $": base({variableName}, {string.Join(", ", baseParams)})"
+                    : $": base({variableName})";
+            }
+            else
+            {
+                if (baseParams?.Any() == true)
+                {
+                    baseString = $": base({string.Join(", ", baseParams)})";
+                }
+            }
 
             var classCode = $@"class {className}
                           {{
                               private readonly {typeName} _{variableName};
 
-                              public {className}( {typeName} {variableName}) {(@base ? $": base({variableName})" : null)}
+                              public {className}( {typeName} {variableName}) {baseString}
                               {{
                                   _{variableName} = {variableName};
                               }}
