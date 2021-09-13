@@ -1,7 +1,7 @@
 ﻿using System;
 namespace NetDaemon.Common.Reactive.States
 {
-    public class StringState : StateObject<string?>
+    public class StringState : StateObject
     {
         public StringState(string? state) : base(state)
         {
@@ -12,6 +12,6 @@ namespace NetDaemon.Common.Reactive.States
             return value.State;
         }
 
-        public override string? Value => IsMissing ? null : Value;
+        public string? Value => Missing ? null : Value;
     }
 }

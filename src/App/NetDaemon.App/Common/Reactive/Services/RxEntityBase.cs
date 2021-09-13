@@ -118,7 +118,7 @@ namespace NetDaemon.Common.Reactive.Services
 
         // We need a 'new' here because the normal type of State is string and we cannot overload string with eg double
         // TODO: smarter conversion of string to TState to take into account 'Unavalable' etc
-        public override TState? State => (TState?)Activator.CreateInstance(typeof(TState), base.State?.ToString());
+        public override TState State => (TState)Activator.CreateInstance(typeof(TState), base.State?.ToString())!;
 
         public override TAttributes? Attribute => EntityState?.AttributesJson.ToObject<TAttributes>();
 

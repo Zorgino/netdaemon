@@ -1,12 +1,12 @@
 ﻿namespace NetDaemon.Common.Reactive.States
 {
-    public sealed class NumericState : StateObject<double?>
+    public sealed class NumericState : StateObject
     {
         public NumericState(string? state) : base(state)
         {
         }
 
-        public override double? Value
+        public double? Value
         {
             get
             {
@@ -19,7 +19,7 @@
             }
         }
 
-        public override bool IsMissing => base.IsMissing || Value is null;
+        public override bool Missing => base.Missing || Value is null;
 
         public static implicit operator double(NumericState state)
         {

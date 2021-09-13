@@ -1,26 +1,26 @@
 ﻿namespace NetDaemon.Common.Reactive.States
 {
-    public class OnOffState : StateObject<bool?>
+    public class OnOffState : StateObject
     {
         public OnOffState(string? state) : base(state)
         {
         }
 
-        public bool IsOn => Value == true;
+        public bool IsOn => State is "on";
 
-        public bool IsOff => Value == false;
+        public bool IsOff => State is "off";
 
-        public override bool IsMissing => base.IsMissing || Value is null;
-
-        public override bool? Value => State switch{
+        public bool? Value => State switch{
             "on" => true,
             "off" => false,
             _ => null
         };
 
+        public override bool Missing => base.Missing || Value is null;
+
         public static implicit operator bool(OnOffState state)
         {
-            return !state.IsMissing && state.IsOn;
+            return !state.Missing && state.IsOn;
         }
 
         public static implicit operator bool?(OnOffState state)

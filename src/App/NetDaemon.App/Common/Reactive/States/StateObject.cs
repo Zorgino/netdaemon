@@ -10,10 +10,10 @@ namespace NetDaemon.Common.Reactive.States
             State = state;
         }
 
-        public virtual bool IsMissing => State is null || IsUnavailable || IsUnknown;
+        public virtual bool Missing => State is null || Unavailable || Unknown;
 
-        public bool IsUnavailable => State is "unavailable";
+        public bool Unavailable => State is "unavailable";
 
-        public bool IsUnknown => State is "unknown";
+        public bool Unknown => State is "unknown";
     }
 }

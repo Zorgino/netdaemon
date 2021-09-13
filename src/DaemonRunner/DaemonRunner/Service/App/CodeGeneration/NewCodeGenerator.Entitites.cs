@@ -240,12 +240,12 @@ namespace NetDaemon.Service.App.CodeGeneration
             return result.Distinct();
         }
 
-        private static IEnumerable<TypeDeclarationSyntax> GenerateEntitiesTypes(IEnumerable<string> entityIds)
+        private IEnumerable<TypeDeclarationSyntax> GenerateEntitiesTypes(IEnumerable<string> entityIds)
         {
             return entityIds.GroupBy(EntityIdHelper.GetDomain, GenerateEntitiesType);
         }
 
-        private static TypeDeclarationSyntax GenerateEntitiesType(string domain, IEnumerable<string> entityIds)
+        private TypeDeclarationSyntax GenerateEntitiesType(string domain, IEnumerable<string> entityIds)
         {
             var baseClass = $"{GetDomainEntityTypeName(domain)}<{GetAttributesTypeName(domain)}>";
             var entityClass = ClassWithInjected<INetDaemonRxApp>(GetEntitiesTypeName(domain), true)
@@ -263,11 +263,15 @@ namespace NetDaemon.Service.App.CodeGeneration
             return n => n.StartsWith(domain + ".", StringComparison.InvariantCultureIgnoreCase);
         }
 
-        private static PropertyDeclarationSyntax GenerateEntityProperty(string entityId, string domain)
+        private PropertyDeclarationSyntax GenerateEntityProperty(string entityId, string domain)
         {
             var entityName = EntityIdHelper.GetEntity(entityId);
 
-            var propertyCode = $@"{GetDomainEntityTypeName(domain)}<{GetAttributesTypeName(entityId)}> {entityName.ToNormalizedPascalCase("E_")} => new(_{GetNames<INetDaemonRxApp>().VariableName}, ""{entityId}"");";
+            var state = GetEntityStateType(entityId);
+
+            var propertyCode = state is null
+                ? $@"{GetDomainEntityTypeName(domain)}<{GetAttributesTypeName(entityId)}> {entityName.ToNormalizedPascalCase("E_")} => new(_{GetNames<INetDaemonRxApp>().VariableName}, ""{entityId}"");"
+                : $@"{GetDomainEntityTypeName(domain)}<{state.FullName}, {GetAttributesTypeName(entityId)}> {entityName.ToNormalizedPascalCase("E_")} => new(_{GetNames<INetDaemonRxApp>().VariableName}, ""{entityId}"");";
 
             return ParseProperty(propertyCode).ToPublic();
         }
