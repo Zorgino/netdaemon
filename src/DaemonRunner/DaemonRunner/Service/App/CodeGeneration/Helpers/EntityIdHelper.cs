@@ -1,7 +1,7 @@
 ﻿using System;
 namespace NetDaemon.Service.App.CodeGeneration.Helpers
 {
-    internal static class EntityIdHelper
+    public static class EntityIdHelper
     {
         public static string GetDomain(string str)
         {

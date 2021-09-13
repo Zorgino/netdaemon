@@ -11,7 +11,7 @@ namespace NetDaemon.Common.Reactive.Services
     /// <summary>
     ///     Base class for reactive entity management
     /// </summary>
-    public  class RxEntityBase : RxEntity
+    public class RxEntityBase : RxEntity
     {
         /// <summary>
         /// Gets the id of the entity

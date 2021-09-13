@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 namespace NetDaemon.Service.App.CodeGeneration.Extensions
 {
-    internal static class TypeExtensions
+    public static class TypeExtensions
     {
         private static readonly Dictionary<Type, string> _buildInTypeToAliasNames = new(){
             {typeof(int), "int"},

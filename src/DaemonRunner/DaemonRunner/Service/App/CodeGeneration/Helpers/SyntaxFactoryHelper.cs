@@ -10,6 +10,11 @@ namespace NetDaemon.Service.App.CodeGeneration.Helpers
 {
     internal static class SyntaxFactoryHelper
     {
+        public static string GetReferenceTypeConstraint(string genericTypeName)
+        {
+            return $"where {genericTypeName}: class";
+        }
+
         public static GlobalStatementSyntax ParseMethod(string code)
         {
             return Parse<GlobalStatementSyntax>(code);
