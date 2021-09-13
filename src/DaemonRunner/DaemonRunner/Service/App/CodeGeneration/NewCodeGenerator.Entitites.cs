@@ -99,6 +99,9 @@ namespace NetDaemon.Service.App.CodeGeneration
 
         private IEnumerable<TypeDeclarationSyntax> GenerateEntityDomainAttributeRecords(IEnumerable<IEntityProperties> entities)
         {
+            var mainRecords = new List<TypeDeclarationSyntax>();
+            var partialCommentedRecords = new List<TypeDeclarationSyntax>();
+
             foreach (var entityDomainGroups in entities.GroupBy(x => EntityIdHelper.GetDomain(x.EntityId)))
             {
                 var attributesTypeName = GetAttributesTypeName(entityDomainGroups.Key);
@@ -112,13 +115,12 @@ namespace NetDaemon.Service.App.CodeGeneration
                     .ToList();
 
                 var conflictingHaAttributes = GetConflicts(attrs).ToList();
-                var conflictResolvedHaAttributes = GetAdjustedProperties(conflictingHaAttributes);
 
                 var autoProperties = new List<PropertyDeclarationSyntax>();
 
                 autoProperties.AddRange(
                     attrs
-                    .Except(conflictingHaAttributes.Except(conflictResolvedHaAttributes))
+                    .Except(conflictingHaAttributes)
                     .Select(a => a.GetComputedProperty().ToPublic())
                 );
 
@@ -128,7 +130,7 @@ namespace NetDaemon.Service.App.CodeGeneration
                     .Select(x => x.GetJsonElementProperty().ToPublic())
                 );
 
-                yield return Record(attributesTypeName, autoProperties).ToPublic().ToPartial();
+                mainRecords.Add(Record(attributesTypeName, autoProperties));
 
                 if (conflictingHaAttributes.Count == 0)
                 {
@@ -137,8 +139,10 @@ namespace NetDaemon.Service.App.CodeGeneration
 
                 var commentedProperties = conflictingHaAttributes.Select(x => "// public " + x.GetComputedProperty().ToFullString()).ToArray();
 
-                yield return RecordCommented(attributesTypeName, commentedProperties).ToPublic().ToPartial();
+                partialCommentedRecords.Add(RecordCommented(attributesTypeName, commentedProperties));
             }
+
+            return mainRecords.Concat(partialCommentedRecords).Select(t => t.ToPublic().ToPartial());
         }
 
         // private class EntityAttributes
@@ -202,22 +206,6 @@ namespace NetDaemon.Service.App.CodeGeneration
                     .Duplicates(x => x.PropName)
                     .SelectMany(x => x)
                 );
-
-            return result.Distinct();
-        }
-
-        private static IEnumerable<HaAttributeProperty> GetAdjustedProperties(IEnumerable<HaAttributeProperty> attrs)
-        {
-            var result = new List<HaAttributeProperty>();
-            //
-            // attrs.DistinctBy(x => new{x.HaName}).;
-            //
-            // var differentTypeDuplicates = attrs.Except();
-            //
-            // // result.AddRange(
-            // //
-            // //         ;
-            // // );
 
             return result.Distinct();
         }
