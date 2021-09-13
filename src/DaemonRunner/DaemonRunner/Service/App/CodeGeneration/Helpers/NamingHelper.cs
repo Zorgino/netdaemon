@@ -14,6 +14,11 @@ namespace NetDaemon.Service.App.CodeGeneration.Helpers
 
         public static string GetAttributesTypeName(string prefix)
         {
+            if (prefix.Contains("."))
+            {
+                prefix = prefix.Replace(".", "_");
+            }
+
             var normalizedPrefix = prefix.ToNormalizedPascalCase();
 
             return $"{normalizedPrefix}Attributes";

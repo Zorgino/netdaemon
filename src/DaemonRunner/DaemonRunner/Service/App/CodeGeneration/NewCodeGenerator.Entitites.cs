@@ -57,7 +57,10 @@ namespace NetDaemon.Service.App.CodeGeneration
                 return Property(typeName, propertyName, set: false);
             }).ToArray();
 
-            return Interface("IEntities").AddMembers(autoProperties).ToPublic();
+            return Interface("IEntities")
+                .AddMembers(autoProperties)
+                .ToPublic()
+                .ToPartial();
         }
 
         private static TypeDeclarationSyntax GenerateRootEntitiesClass(IEnumerable<string> domains)
@@ -72,7 +75,10 @@ namespace NetDaemon.Service.App.CodeGeneration
                 return ParseProperty($"{entitiesTypeName} {entitiesPropertyName} => new(_{haContextNames.VariableName});").ToPublic();
             }).ToArray();
 
-            return ClassWithInjected<INetDaemonRxApp>("Entities").WithBase((string)"IEntities").AddMembers(properties).ToPublic();
+            return ClassWithInjected<INetDaemonRxApp>("Entities").WithBase((string)"IEntities")
+                .AddMembers(properties)
+                .ToPublic()
+                .ToPartial();
         }
 
         private IEnumerable<TypeDeclarationSyntax> GenerateEntityAttributeRecords(IEnumerable<IEntityProperties> entities)
@@ -159,6 +165,7 @@ namespace NetDaemon.Service.App.CodeGeneration
             var baseClass = $"{GetDomainEntityTypeName(domain)}<{GetAttributesTypeName(domain)}>";
             var entityClass = ClassWithInjected<INetDaemonRxApp>(GetEntitiesTypeName(domain), true)
                 .ToPublic()
+                .ToPartial()
                 .WithBase($"Entities<{baseClass}>");
 
             var domainEntities = entities.Where(EntityIsOfDomain(domain)).ToList();
@@ -206,7 +213,7 @@ namespace NetDaemon.Service.App.CodeGeneration
                                             }}
                                     }}";
 
-            yield return ParseClass(classDeclaration).ToPublic();
+            yield return ParseClass(classDeclaration).ToPublic().ToPartial();
 
             baseClass = $"{GetDomainEntityTypeName(domain)}<{GetAttributesTypeName(domain)}>";
             classDeclaration = $@"class {entityClass} : {baseClass}
@@ -216,7 +223,7 @@ namespace NetDaemon.Service.App.CodeGeneration
                                             }}
                                     }}";
 
-            yield return ParseClass(classDeclaration).ToPublic();
+            yield return ParseClass(classDeclaration).ToPublic().ToPartial();
         }
         /// <summary>
         ///     Returns a list of domains from all entities

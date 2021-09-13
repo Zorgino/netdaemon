@@ -1,10 +1,12 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json.Serialization;
 using JoySoftware.HomeAssistant.Model;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using NetDaemon.Common;
 using NetDaemon.Common.Reactive;
 using NetDaemon.Daemon.Config;
+using NetDaemon.Service.App.CodeGeneration.Extensions;
 using NetDaemon.Service.App.CodeGeneration.Helpers;
 using static NetDaemon.Service.App.CodeGeneration.Helpers.NamingHelper;
 using static NetDaemon.Service.App.CodeGeneration.Helpers.SyntaxFactoryHelper;
@@ -51,7 +53,7 @@ namespace NetDaemon.Service.App.CodeGeneration
                 return ParseProperty(propertyCode).ToPublic();
             }).ToArray();
 
-            return ClassWithInjected<INetDaemonRxApp>("Services").WithBase((string)"IServices").AddMembers(properties).ToPublic();
+            return ClassWithInjected<INetDaemonRxApp>("Services").WithBase((string)"IServices").AddMembers(properties).ToPublic().ToPartial();
         }
 
         private static TypeDeclarationSyntax GenerateRootServicesInterface(IEnumerable<string> domains)
@@ -64,12 +66,12 @@ namespace NetDaemon.Service.App.CodeGeneration
                 return Property(typeName, domainName, set: false);
             }).ToArray();
 
-            return Interface("IServices").AddMembers(properties).ToPublic();
+            return Interface("IServices").AddMembers(properties).ToPublic().ToPartial();
         }
 
         private static TypeDeclarationSyntax GenerateServicesDomainType(string domain, IEnumerable<HassService> services)
         {
-            var serviceTypeDeclaration = ClassWithInjected<INetDaemonRxApp>(GetServicesTypeName(domain)).ToPublic();
+            var serviceTypeDeclaration = ClassWithInjected<INetDaemonRxApp>(GetServicesTypeName(domain)).ToPublic().ToPartial();
 
             var serviceMethodDeclarations = services.SelectMany(service => GenerateServiceMethod(domain, service)).ToArray();
 
@@ -86,10 +88,13 @@ namespace NetDaemon.Service.App.CodeGeneration
             }
 
             var autoProperties = serviceArguments.Arguments
-                .Select(argument => Property(argument.TypeName!, argument.PropertyName!).ToPublic())
+                .Select(argument
+                    => Property(argument.TypeName!, argument.PropertyName!)
+                        .WithAttribute<JsonPropertyNameAttribute>(argument.HaName)
+                        .ToPublic())
                 .ToArray();
 
-            yield return Record(serviceArguments.TypeName, autoProperties).ToPublic();
+            yield return Record(serviceArguments.TypeName, autoProperties).ToPublic().ToPartial();
         }
 
         private static IEnumerable<MemberDeclarationSyntax> GenerateServiceMethod(string domain, HassService service)

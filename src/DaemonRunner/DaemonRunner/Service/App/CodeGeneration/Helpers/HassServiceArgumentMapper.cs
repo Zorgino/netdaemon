@@ -25,14 +25,14 @@ namespace NetDaemon.Service.App.CodeGeneration.Helpers
                     or AddonSelector
                     or EntitySelector
                     or DeviceSelector
-                    or ObjectSelector
+                    or SelectSelector
                     or TargetSelector
                     or TextSelector
                     or null => typeof(string),
                 BooleanSelector => typeof(bool),
                 NumberSelector => typeof(long),
+                ObjectSelector => typeof(object),
                 TimeSelector => typeof(DateTime),
-                SelectSelector => typeof(List<string>),
                 _ => typeof(string)
             };
         }

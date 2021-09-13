@@ -54,7 +54,8 @@ namespace NetDaemon.Service.App.CodeGeneration
             var entityTypeName = GetDomainEntityTypeName(domain);
 
             yield return ParseMethod(
-                $@"void {GetServiceMethodName(serviceName)}(this {entityTypeName} entity {(args is not null ? $", {args.GetParametersString()}" : string.Empty)})
+                $@"void {GetServiceMethodName(serviceName)}<T>(this {entityTypeName}<T> entity {(args is not null ? $", {args.GetParametersString()}" : string.Empty)})
+                            where T : class
             {{
                 entity.{nameof(RxEntityBase.CallService)}(""{serviceName}""{(args is not null ? $", {args.GetParametersVariable()}" : string.Empty)});
             }}").ToPublic().ToStatic();
@@ -62,7 +63,8 @@ namespace NetDaemon.Service.App.CodeGeneration
             if (args is not null)
             {
                 yield return ParseMethod(
-                    $@"void {GetServiceMethodName(serviceName)}(this {entityTypeName} entity , {args.GetParametersDecomposedString()})
+                    $@"void {GetServiceMethodName(serviceName)}<T>(this {entityTypeName}<T> entity , {args.GetParametersDecomposedString()})
+                            where T : class
                 {{
                     entity.{nameof(RxEntityBase.CallService)}(""{serviceName}"", {args.GetParametersDecomposedVariable()});
                 }}").ToPublic().ToStatic();
