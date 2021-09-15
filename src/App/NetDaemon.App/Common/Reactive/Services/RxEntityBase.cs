@@ -124,6 +124,21 @@ namespace NetDaemon.Common.Reactive.Services
 
         public override TEntityState? EntityState => MapNullableState(base.EntityState);
 
+        // public T Merge<T, TEntity, TEntityState, TState, TAttributes>(T second)
+        //     where T: RxEntityBase<TEntity, TEntityState, TState, TAttributes>
+        //     where TEntity : RxEntityBase<TEntity, TEntityState, TState, TAttributes>
+        //     where TEntityState : EntityState<TState, TAttributes>
+        //     where TAttributes : class
+        //     where TState : class
+        // {
+        //     if (second == null)
+        //         throw new ArgumentNullException(nameof(second));
+        //
+        //     var mergedEntityIds = EntityIds.Concat(second.EntityIds);
+        //
+        //     return (T)Activator.CreateInstance(typeof(T), DaemonRxApp!, mergedEntityIds!)!;
+        // }
+
         public override IObservable<StateChange</*TEntity, */TEntityState>> StateAllChanges =>
             base.StateAllChanges.Select(e => new StateChange</*TEntity,*/ TEntityState>(/*(TEntity)this,*/ MapNullableState(e.Old), MapNullableState(e.New)));
 

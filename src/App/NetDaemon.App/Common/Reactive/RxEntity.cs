@@ -68,11 +68,11 @@ namespace NetDaemon.Common.Reactive
         /// <summary>
         ///     The protected daemon app instance
         /// </summary>
-        protected INetDaemonRxApp DaemonRxApp { get; }
+        public INetDaemonRxApp DaemonRxApp { get; }
         /// <summary>
         ///     Entity ids being handled by the RxEntity
         /// </summary>
-        protected IEnumerable<string> EntityIds { get; }
+        public IEnumerable<string> EntityIds { get; }
 
         /// <summary>
         ///     Constructor

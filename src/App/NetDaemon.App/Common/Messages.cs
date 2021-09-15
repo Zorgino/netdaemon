@@ -74,7 +74,7 @@ namespace NetDaemon.Common
             _attributesLazy = new (() => AttributesJson.ToObject<TAttributes>());
         }
 
-        public new TState? State => base.State == null ? default : (TState?)Convert.ChangeType(base.State, typeof(TState), CultureInfo.InvariantCulture);
+        public new TState State => (TState)Activator.CreateInstance(typeof(TState), base.State?.ToString())!;
         public override TAttributes Attribute => _attributesLazy.Value;
     }
 

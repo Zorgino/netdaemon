@@ -7,11 +7,11 @@
         }
 
         public bool Playing => State is "playing";
-
         public bool Idle => State is "idle";
 
-        public bool On => State is "on" || Playing;
+        public bool Paused => State is "paused";
 
-        public bool Off => State is "off" || Idle;
+        public bool On => State is "on" || Playing;
+        public bool Off => State is "off" || Idle || Paused;
     }
 }
