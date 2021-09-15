@@ -20,29 +20,17 @@ namespace NetDaemon.Common
         /// <summary>
         /// Creates a new ApplicationContext
         /// </summary>
-        public ApplicationContext(Type applicationType, string id, IServiceProvider serviceProvider)
+        public ApplicationContext(Type applicationType, string id, IServiceProvider serviceProvider, IEnumerable<Type>? dependencies = null)
         {
             // Create a new ServiceScope for all objects we create for this app
             // this makes sure they will all be disposed along with the app
             _serviceScope = serviceProvider.CreateScope();
             ServiceProvider = _serviceScope.ServiceProvider;
 
-            // var hasINetDaemonParam = applicationType
-            //     .GetConstructors()
-            //     .First()
-            //     .GetParameters()
-            //     .Any(p => p.ParameterType == typeof(INetDaemonRxApp));
+            ApplicationInstance = ActivatorUtilities.GetServiceOrCreateInstance(_serviceScope.ServiceProvider, applicationType);
 
-            // object param = null;
-            // if (hasINetDaemonParam)
-            // {
-            //     param = ActivatorUtilities.CreateInstance<NetDaemonRxApp>(_serviceScope.ServiceProvider);
-            //     ApplicationInstance = ActivatorUtilities.CreateInstance(_serviceScope.ServiceProvider, applicationType, param);
-            // }
-            // else
-            // {
-                ApplicationInstance = ActivatorUtilities.GetServiceOrCreateInstance(_serviceScope.ServiceProvider, applicationType);
-            // }
+            Dependencies = dependencies ?? Array.Empty<Type>();
+
             _applicationMetadata = InitializeMetaData();
             Id = id;
         }
@@ -99,7 +87,7 @@ namespace NetDaemon.Common
         /// <summary>
         ///     The dependencies that needs to be initialized before this app
         /// </summary>
-        public IEnumerable<string> Dependencies { get; set; } = Array.Empty<string>();
+        public IEnumerable<Type> Dependencies { get; set; } = Array.Empty<Type>();
 
         /// <summary>
         ///     Returns the description, is the decorating comment of app class

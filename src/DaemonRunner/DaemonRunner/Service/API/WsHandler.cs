@@ -64,7 +64,7 @@ namespace NetDaemon.Service.Api
                     Data = _host?.AllAppContexts.Select(n => new ApiApplication()
                     {
                         Id = n.Id,
-                        Dependencies = n.Dependencies,
+                        Dependencies = n.Dependencies.Select(x => x.FullName!),
                         IsEnabled = n.IsEnabled,
                         Description = n.Description,
                         NextScheduledEvent = n.IsEnabled ? n.RuntimeInfo.NextScheduledEvent : null,
@@ -74,7 +74,7 @@ namespace NetDaemon.Service.Api
                 await BroadCast(JsonSerializer.Serialize(eventMessage, _jsonOptions)).ConfigureAwait(false);
             }
         }
-        
+
         [SuppressMessage("", "CA1031")]
         public async Task Invoke(HttpContext context)
         {
@@ -115,7 +115,7 @@ namespace NetDaemon.Service.Api
                                     Data = _host?.AllAppContexts.Select(n => new ApiApplication()
                                     {
                                         Id = n.Id,
-                                        Dependencies = n.Dependencies,
+                                        Dependencies = n.Dependencies.Select(x => x.FullName!),
                                         IsEnabled = n.IsEnabled,
                                         Description = n.Description,
                                         NextScheduledEvent = n.IsEnabled ? n.RuntimeInfo.NextScheduledEvent : null,

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using Microsoft.Extensions.Logging;
 using NetDaemon.Common;
 using NetDaemon.Common.Exceptions;
@@ -16,11 +17,11 @@ namespace NetDaemon.Daemon
             ServiceProvider = serviceProvider;
         }
 
-        public ApplicationContext Instantiate(Type applicationType, string appId)
+        public ApplicationContext Instantiate(Type applicationType, string appId, IEnumerable<Type>? dependencies = null)
         {
             try
             {
-                return new ApplicationContext(applicationType, appId, ServiceProvider);
+                return new ApplicationContext(applicationType, appId, ServiceProvider, dependencies);
             }
             catch (Exception e)
             {

@@ -56,9 +56,12 @@ namespace NetDaemon.Daemon
 
                 if (appConfigs.Length == 0)
                 {
-                    var appId = appType.GetCustomAttribute<NetDaemonAppAttribute>()?.Id ?? appType.Name;
+                    var appAttr = appType.GetCustomAttribute<NetDaemonAppAttribute>();
 
-                    yield return appInstantiator.Instantiate(appType, appId);
+                    var appId = appAttr?.Id ?? appType.Name;
+                    var dependencies = appAttr?.Dependencies;
+
+                    yield return appInstantiator.Instantiate(appType, appId, dependencies);
                 }
 
                 foreach (var appConfig in appConfigs)

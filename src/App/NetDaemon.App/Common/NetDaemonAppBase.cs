@@ -15,17 +15,18 @@ namespace NetDaemon.Common
     /// <summary>
     ///     Base class for all NetDaemon App types
     /// </summary>
+    ///
     public abstract class NetDaemonAppBase : INetDaemonAppBase, IApplicationMetadata, INetDaemonPersistantApp
     {
         private ApplicationPersistenceService? _persistenceService;
-        
+
         /// <summary>
         ///     A set of properties found in static analysis of code for each app
         /// </summary>
         public static Dictionary<string, Dictionary<string, string>> CompileTimeProperties { get; } = new();
 
         private Task? _manageRuntimeInformationUpdatesTask;
-      
+
         /// <summary>
         ///     All actions being performed for service call events
         /// </summary>
@@ -49,11 +50,11 @@ namespace NetDaemon.Common
             _cancelSource = new();
             _isDisposed = false;
         }
-        
+
         /// <summary>
         ///    Dependencies on other applications that will be initialized before this app
         /// </summary>
-        public IEnumerable<string> Dependencies { get; set; } = new List<string>();
+        public IEnumerable<Type> Dependencies { get; set; } = new List<Type>();
 
         /// <inheritdoc/>
         public ConcurrentDictionary<string, object> Global => _global;

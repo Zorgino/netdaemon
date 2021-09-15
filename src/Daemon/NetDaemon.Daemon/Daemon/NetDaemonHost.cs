@@ -1067,7 +1067,7 @@ namespace NetDaemon.Daemon
                 if (state == "off")
                 {
                     // We need to turn off any dependent apps
-                    foreach (var depApp in InternalAllAppInstances.Values.Where(n => n.Dependencies.Contains(app.Id)))
+                    foreach (var depApp in InternalAllAppInstances.Values.Where(n => n.Dependencies.Contains(app.ApplicationInstance.GetType())))
                     {
                         await SetDependentState(depApp.EntityId, state).ConfigureAwait(false);
                     }
@@ -1080,9 +1080,9 @@ namespace NetDaemon.Daemon
                 {
                     app.IsEnabled = true;
                     // Enable all apps that this app is dependent on
-                    foreach (var depOnId in app.Dependencies)
+                    foreach (var depOnType in app.Dependencies)
                     {
-                        var depOnApp = InternalAllAppInstances.Values.FirstOrDefault(n => n.Id == depOnId);
+                        var depOnApp = InternalAllAppInstances.Values.FirstOrDefault(n => n.ApplicationInstance.GetType() == depOnType);
                         if (depOnApp is not null)
                         {
                             await SetDependentState(depOnApp.EntityId, state).ConfigureAwait(false);

@@ -10,23 +10,23 @@ namespace NetDaemon.Daemon
     {
         internal static IReadOnlyList<ApplicationContext> SortByDependency(IReadOnlyList<ApplicationContext> unsortedList)
         {
-            var dependencies = unsortedList.SelectMany(n => n.Dependencies).ToHashSet();
+            var dependencies = unsortedList.SelectMany(n => n.Dependencies, (_, type) => type.FullName!).ToHashSet();
 
             if (dependencies.Count == 0) return unsortedList;
 
             // just make sure we  have no null id's
             unsortedList = unsortedList.Where(a => a.Id is not null).ToList();
 
-            var appById = unsortedList.ToDictionary(a => a.Id!);
-            var ids = appById.Keys.ToHashSet();
+            var appById = unsortedList.ToDictionary(a => a.ApplicationInstance.GetType().FullName!);
+            var typeNames = appById.Keys.ToHashSet();
 
-            var missing = dependencies.FirstOrDefault(d => !ids.Contains(d));
+            var missing = dependencies.FirstOrDefault(d => !typeNames.Contains(d));
             if (missing != null) throw new NetDaemonException(
                 $"There is no app named {missing}, please check dependencies or make sure you have not disabled the dependent app!");
 
-            var edges =  unsortedList.SelectMany(p => p.Dependencies.Select(d => (p.Id!, d))).ToHashSet();
+            var edges =  unsortedList.SelectMany(p => p.Dependencies.Select(d => (p.ApplicationInstance.GetType().FullName!, d!.FullName!))).ToHashSet();
 
-            var order = TopologicalSort(ids, edges) ??
+            var order = TopologicalSort(typeNames, edges) ??
                         throw new NetDaemonException(
                             "Application dependencies is wrong, please check dependencies for circular dependencies!");
 
