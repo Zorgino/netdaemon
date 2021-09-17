@@ -46,7 +46,7 @@ namespace NetDaemon.Common.Reactive.Services
         /// <summary>
         /// Gets the entity's state
         /// </summary>
-        public dynamic? State => DaemonRxApp?.State(EntityId)?.State;
+        public virtual object? State => DaemonRxApp?.State(EntityId)?.State;
 
         /// <summary>
         /// Representing an AlarmControlPanel entity.
@@ -99,7 +99,7 @@ namespace NetDaemon.Common.Reactive.Services
         {
         }
 
-        public new virtual TAttributes? Attribute => EntityState?.AttributesJson.ToObject<TAttributes>();
+        public override TAttributes? Attribute => EntityState?.AttributesJson.ToObject<TAttributes>();
     }
 
 
@@ -118,11 +118,11 @@ namespace NetDaemon.Common.Reactive.Services
 
         // We need a 'new' here because the normal type of State is string and we cannot overload string with eg double
         // TODO: smarter conversion of string to TState to take into account 'Unavalable' etc
-        public TState State => (TState)Activator.CreateInstance(typeof(TState), base.State?.ToString())!;
+        public override TState State => (TState)Activator.CreateInstance(typeof(TState), base.State?.ToString())!;
 
         public override TAttributes? Attribute => EntityState?.AttributesJson.ToObject<TAttributes>();
 
-        public new TEntityState? EntityState => MapNullableState(base.EntityState);
+        public override TEntityState? EntityState => MapNullableState(base.EntityState);
 
         // public T Merge<T, TEntity, TEntityState, TState, TAttributes>(T second)
         //     where T: RxEntityBase<TEntity, TEntityState, TState, TAttributes>
@@ -139,10 +139,10 @@ namespace NetDaemon.Common.Reactive.Services
         //     return (T)Activator.CreateInstance(typeof(T), DaemonRxApp!, mergedEntityIds!)!;
         // }
 
-        public new IObservable<StateChange</*TEntity, */TEntityState>> StateAllChanges =>
+        public override IObservable<StateChange</*TEntity, */TEntityState>> StateAllChanges =>
             base.StateAllChanges.Select(e => new StateChange</*TEntity,*/ TEntityState>(/*(TEntity)this,*/ MapNullableState(e.Old), MapNullableState(e.New)));
 
-        public new IObservable<StateChange</*TEntity,*/ TEntityState>> StateChanges =>
+        public override IObservable<StateChange</*TEntity,*/ TEntityState>> StateChanges =>
             base.StateChanges.Select(e => new StateChange</*TEntity,*/ TEntityState>(/*(TEntity)this,*/ MapNullableState(e.Old), MapNullableState(e.New)));
 
         private static TEntityState? MapNullableState(EntityState? state)

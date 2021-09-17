@@ -75,7 +75,7 @@ namespace NetDaemon.Common
         }
 
         public new TState State => (TState)Activator.CreateInstance(typeof(TState), base.State?.ToString())!;
-        public new TAttributes Attribute => _attributesLazy.Value;
+        public override TAttributes Attribute => _attributesLazy.Value;
     }
 
     /// <summary>
