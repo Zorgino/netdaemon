@@ -32,7 +32,7 @@ namespace NetDaemon.Service.App.CodeGeneration
         private IEnumerable<TypeDeclarationSyntax> GenerateEntityTypes(IEnumerable<IEntityProperties> entities)
         {
             var entityIds = entities.Select(x => x.EntityId).ToList();
-            var entityDomains = GetDomainsFromEntities(entityIds).OrderBy(s => s).ToList();
+            var entityDomains = entityIds.Select(EntityHelper.GetDomain).Distinct().OrderBy(s => s).ToList();
 
             return new[]
             {
@@ -48,6 +48,44 @@ namespace NetDaemon.Service.App.CodeGeneration
                 GenerateEntityAttributeRecords(entities)
             }.SelectMany(x => x);
         }
+
+        #region Entities : IEntities
+        private static TypeDeclarationSyntax GenerateRootEntitiesInterface(IEnumerable<string> domains)
+        {
+            var autoProperties = domains.Select(domain =>
+            {
+                var typeName = GetDomainEntitiesTypeName(domain);
+                var propertyName = domain.ToPascalCase();
+
+                return Property(typeName, propertyName, set: false);
+            }).ToArray();
+
+            return Interface("IEntities")
+                .AddMembers(autoProperties)
+                .ToPublic()
+                .ToPartial();
+        }
+
+        private static TypeDeclarationSyntax GenerateRootEntitiesClass(IEnumerable<string> domains)
+        {
+            var haContextNames = GetNames<INetDaemonRxApp>();
+
+            var properties = domains.Select(domain =>
+            {
+                var entitiesTypeName = GetDomainEntitiesTypeName(domain);
+                var entitiesPropertyName = domain.ToPascalCase();
+
+                return ParseProperty($"{entitiesTypeName} {entitiesPropertyName} => new(_{haContextNames.VariableName});").ToPublic();
+            }).ToArray();
+
+            return ClassWithInjected<INetDaemonRxApp>("Entities").WithBase((string)"IEntities")
+                .AddMembers(properties)
+                .ToPublic()
+                .ToPartial();
+        }
+        #endregion
+
+        #region ClimateEntity, ClimateEntity<TAttributes>, ClimateEntity<TState, TAttributes>
 
         private IEnumerable<TypeDeclarationSyntax> GenerateEntityDomainBaseTypes(IEnumerable<string> domains)
         {
@@ -122,41 +160,11 @@ namespace NetDaemon.Service.App.CodeGeneration
             return ParseClass(classDeclaration);
         }
 
-        private static TypeDeclarationSyntax GenerateRootEntitiesInterface(IEnumerable<string> domains)
-        {
-            var autoProperties = domains.Select(domain =>
-            {
-                var typeName = GetDomainEntitiesTypeName(domain);
-                var propertyName = domain.ToPascalCase();
+        #endregion
 
-                return Property(typeName, propertyName, set: false);
-            }).ToArray();
+        #region ClimateAttributes, ClimateAcAttributes
 
-            return Interface("IEntities")
-                .AddMembers(autoProperties)
-                .ToPublic()
-                .ToPartial();
-        }
-
-        private static TypeDeclarationSyntax GenerateRootEntitiesClass(IEnumerable<string> domains)
-        {
-            var haContextNames = GetNames<INetDaemonRxApp>();
-
-            var properties = domains.Select(domain =>
-            {
-                var entitiesTypeName = GetDomainEntitiesTypeName(domain);
-                var entitiesPropertyName = domain.ToPascalCase();
-
-                return ParseProperty($"{entitiesTypeName} {entitiesPropertyName} => new(_{haContextNames.VariableName});").ToPublic();
-            }).ToArray();
-
-            return ClassWithInjected<INetDaemonRxApp>("Entities").WithBase((string)"IEntities")
-                .AddMembers(properties)
-                .ToPublic()
-                .ToPartial();
-        }
-
-        private IEnumerable<TypeDeclarationSyntax> GenerateEntityAttributeRecords(IEnumerable<IEntityProperties> entities)
+         private IEnumerable<TypeDeclarationSyntax> GenerateEntityAttributeRecords(IEnumerable<IEntityProperties> entities)
         {
             return entities.Select(GenerateEntityAttributeRecord);
         }
@@ -242,6 +250,10 @@ namespace NetDaemon.Service.App.CodeGeneration
             return result.Distinct();
         }
 
+        #endregion
+
+        #region ClimateEntities
+
         private IEnumerable<TypeDeclarationSyntax> GenerateDomainEntitiesTypes(IEnumerable<IEntityProperties> entities)
         {
             return entities.GroupBy(EntityHelper.GetDomain, GenerateDomainEntitiesType);
@@ -285,10 +297,6 @@ namespace NetDaemon.Service.App.CodeGeneration
             return ParseProperty(propertyCode).ToPublic();
         }
 
-        /// <summary>
-        ///     Returns a list of domains from all entities
-        /// </summary>
-        /// <param name="entities">A list of entities</param>
-        internal static IEnumerable<string> GetDomainsFromEntities(IEnumerable<string> entities) => entities.Select(EntityHelper.GetDomain).Distinct();
+        #endregion
     }
 }
