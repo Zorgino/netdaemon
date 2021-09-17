@@ -158,13 +158,15 @@ namespace NetDaemon.Service.App.CodeGeneration
 
         private IEnumerable<TypeDeclarationSyntax> GenerateEntityAttributeRecords(IEnumerable<IEntityProperties> entities)
         {
-            return entities.Select(x => GenerateEntityAttributeRecord(x, GetAttributesTypeName(x.EntityId)));
+            return entities.Select(GenerateEntityAttributeRecord);
         }
 
-        private TypeDeclarationSyntax GenerateEntityAttributeRecord(IEntityProperties entity, string attributesTypeName)
+        private TypeDeclarationSyntax GenerateEntityAttributeRecord(IEntityProperties entity)
         {
+            var attributesTypeName = GetAttributesTypeName(entity.EntityId);
+
             var autoProperties = new Dictionary<string, object>(entity.Attribute)
-                .Select(x => new HaAttributeProperty(x.Key, x.Value.GetTypeByValues()))
+                .Select(x => new HaAttributeProperty(x.Key, x.Value.GetTypeByValues().ToTypeCanBeImplicitlyConvertedTo()))
                 .OrderBy(a => a.HaName)
                 .Distinct()
                 .Select(a => a.GetAutoProperty().ToPublic());
@@ -262,24 +264,6 @@ namespace NetDaemon.Service.App.CodeGeneration
 
             return entityClass.AddMembers(entityProperty);
         }
-
-        // private bool EntityIdPropertyNotImplementedInPartial(string entityId)
-        // {
-        //     var domainEntityTypeName = GetDomainEntityTypeName(EntityIdHelper.GetDomain(entityId));
-        //     var propertyName = EntityIdHelper.GetEntity(entityId).ToNormalizedPascalCase("E_");
-        //
-        //     var partialEntityType = GetType()
-        //         .Assembly
-        //         .DefinedTypes
-        //         .FirstOrDefault(t => t.Name == domainEntityTypeName && t.GetCustomAttribute<Partial>() is not null);
-        //
-        //     if (partialEntityType is null)
-        //     {
-        //         return true;
-        //     }
-        //
-        //     return Array.Find(partialEntityType.GetProperties(BindingFlags.Public), p => p.Name == propertyName) is null;
-        // }
 
         private bool EntityIsNotNetDaemonGenerated(IEntityProperties entity)
         {
