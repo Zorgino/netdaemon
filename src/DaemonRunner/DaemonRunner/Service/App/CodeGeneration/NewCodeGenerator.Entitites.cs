@@ -295,17 +295,22 @@ namespace NetDaemon.Service.App.CodeGeneration
                 .WithBase(GetDomainEntityTypeName(domain));
 
             var entityProperty = entities
-                .Where(EntityIsNotNetDaemonGenerated)
-                .Select(x => x.EntityId)
+                .Where(e => !EntityIsFromNetDaemonSetState(e))
+                .Select(e => e.EntityId)
                 .Select(GenerateEntityProperty)
                 .ToArray();
 
             return entityClass.AddMembers(entityProperty);
         }
 
-        private bool EntityIsNotNetDaemonGenerated(IEntityProperties entity)
+        private static bool EntityIsFromNetDaemonSetState(IEntityProperties entity)
         {
-            return entity.Attribute.integration != "netdaemon";
+            if (entity.Attribute is null || entity.Attribute.integration != "netdaemon")
+            {
+                return false;
+            }
+
+            return !entity.Attribute.friendly_name?.StartsWith("netdaemon_");
         }
 
         private PropertyDeclarationSyntax GenerateEntityProperty(string entityId)
