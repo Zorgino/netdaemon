@@ -26,9 +26,9 @@
             return !state.Missing && state.IsOn;
         }
 
-        public static implicit operator bool?(OnOffState state)
+        public static implicit operator OnOffState(bool state)
         {
-            return state.Value;
+            return new OnOffState(state ? On.State : Off.State);
         }
     }
 }

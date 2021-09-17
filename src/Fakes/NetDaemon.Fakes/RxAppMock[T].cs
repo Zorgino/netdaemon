@@ -225,13 +225,16 @@ namespace NetDaemon.Daemon.Fakes
         //     MockState.Add(new EntityState() { EntityId = entityId, State = newState, Attribute = attributes });
         // }
 
-        private void UpdateMockState<TState, TAttributes>(string entityId, TState? newState, TAttributes attributes)
+        protected void UpdateMockState<TState, TAttributes>(string entityId, TState? newState, TAttributes? attributes = null)
             where TAttributes : class
             where TState : class
         {
             var state = MockState.FirstOrDefault(e => e.EntityId == entityId);
-            if (state == null) return;
-            MockState.Remove(state);
+            if (state != null)
+            {
+                MockState.Remove(state);
+            }
+
             MockState.Add(new EntityState() { EntityId = entityId, State = newState, Attribute = attributes });
         }
 
@@ -284,15 +287,15 @@ namespace NetDaemon.Daemon.Fakes
         /// <param name="newState">New state</param>
         public void TriggerStateChange(EntityState oldState, EntityState newState)
         {
-            var state = MockState.FirstOrDefault(entity => entity.EntityId == newState.EntityId);
-            var index = MockState.IndexOf(state!);
-
-            if (index != -1)
-                MockState[index] = newState;
-            else
-            {
-                UpdateMockState(newState.EntityId, newState, newState.Attribute);
-            }
+            // var state = MockState.FirstOrDefault(entity => entity.EntityId == newState.EntityId);
+            // var index = MockState.IndexOf(state!);
+            //
+            // if (index != -1)
+            //     MockState[index] = newState;
+            // else
+            // {
+            // }
+            UpdateMockState(newState.EntityId, newState, newState.Attribute);
 
             // Call the observable with no blocking
             foreach (var observer in ((StateChangeObservable)StateChangesObservable).Observers)
@@ -315,26 +318,26 @@ namespace NetDaemon.Daemon.Fakes
         /// <param name="entityId">Unique id of the entity</param>
         /// <param name="oldState">Old state</param>
         /// <param name="newState">New state</param>
-        public void TriggerStateChange<TEntity, TEntityState, TState, TAttributes>(RxEntityBase<TEntity, TEntityState, TState, TAttributes> entity, TState? oldState, TState? newState)
-            where TEntity : RxEntityBase<TEntity, TEntityState, TState, TAttributes>
-            where TEntityState : EntityState<TState, TAttributes>
-            where TAttributes : class
-            where TState : class
-        {
-            TriggerStateChange(
-                                new EntityState
-                                {
-                                    EntityId = entity.EntityId,
-                                    State = oldState
-                                },
-                              new EntityState
-                              {
-                                  EntityId = entity.EntityId,
-                                  State = newState
-                              }
-
-                            );
-        }
+        // public void TriggerStateChange<TEntity, TEntityState, TState, TAttributes>(RxEntityBase<TEntity, TEntityState, TState, TAttributes> entity, TState? oldState, TState? newState)
+        //     where TEntity : RxEntityBase<TEntity, TEntityState, TState, TAttributes>
+        //     where TEntityState : EntityState<TState, TAttributes>
+        //     where TAttributes : class
+        //     where TState : class
+        // {
+        //     TriggerStateChange(
+        //                         new EntityState
+        //                         {
+        //                             EntityId = entity.EntityId,
+        //                             State = oldState
+        //                         },
+        //                       new EntityState
+        //                       {
+        //                           EntityId = entity.EntityId,
+        //                           State = newState
+        //                       }
+        //
+        //                     );
+        // }
 
         /// <summary>
         ///     Trigger event
