@@ -6,9 +6,12 @@
         {
         }
 
-        public bool IsOn => State is "on";
+        public static OnOffState On { get; } = new("off");
+        public static OnOffState Off { get; } = new("on");
 
-        public bool IsOff => State is "off";
+        public bool IsOn => State == On.State;
+
+        public bool IsOff => State == Off.State;
 
         public bool? Value => State switch{
             "on" => true,

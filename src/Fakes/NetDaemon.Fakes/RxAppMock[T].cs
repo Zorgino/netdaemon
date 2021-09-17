@@ -211,13 +211,23 @@ namespace NetDaemon.Daemon.Fakes
                         return _mockDataRepository.TryGetValue(id, out var value) ? JsonConvert.DeserializeObject(value, returnType) : null;
                     }));
         }
+        //
+        // private void UpdateMockState(string[] entityIds, string newState, object? attributes)
+        // {
+        //     foreach (var entityId in entityIds) UpdateMockState(entityId, newState, attributes);
+        // }
 
-        private void UpdateMockState(string[] entityIds, string newState, object? attributes)
-        {
-            foreach (var entityId in entityIds) UpdateMockState(entityId, newState, attributes);
-        }
+        // private void UpdateMockState(string entityId, string newState, object? attributes)
+        // {
+        //     var state = MockState.FirstOrDefault(e => e.EntityId == entityId);
+        //     if (state == null) return;
+        //     MockState.Remove(state);
+        //     MockState.Add(new EntityState() { EntityId = entityId, State = newState, Attribute = attributes });
+        // }
 
-        private void UpdateMockState(string entityId, string newState, object? attributes)
+        private void UpdateMockState<TState, TAttributes>(string entityId, TState? newState, TAttributes attributes)
+            where TAttributes : class
+            where TState : class
         {
             var state = MockState.FirstOrDefault(e => e.EntityId == entityId);
             if (state == null) return;
@@ -279,6 +289,10 @@ namespace NetDaemon.Daemon.Fakes
 
             if (index != -1)
                 MockState[index] = newState;
+            else
+            {
+                UpdateMockState(newState.EntityId, newState, newState.Attribute);
+            }
 
             // Call the observable with no blocking
             foreach (var observer in ((StateChangeObservable)StateChangesObservable).Observers)
@@ -301,17 +315,21 @@ namespace NetDaemon.Daemon.Fakes
         /// <param name="entityId">Unique id of the entity</param>
         /// <param name="oldState">Old state</param>
         /// <param name="newState">New state</param>
-        public void TriggerStateChange(string entityId, object? oldState, object? newState)
+        public void TriggerStateChange<TEntity, TEntityState, TState, TAttributes>(RxEntityBase<TEntity, TEntityState, TState, TAttributes> entity, TState? oldState, TState? newState)
+            where TEntity : RxEntityBase<TEntity, TEntityState, TState, TAttributes>
+            where TEntityState : EntityState<TState, TAttributes>
+            where TAttributes : class
+            where TState : class
         {
             TriggerStateChange(
                                 new EntityState
                                 {
-                                    EntityId = entityId,
+                                    EntityId = entity.EntityId,
                                     State = oldState
                                 },
                               new EntityState
                               {
-                                  EntityId = entityId,
+                                  EntityId = entity.EntityId,
                                   State = newState
                               }
 
@@ -343,6 +361,22 @@ namespace NetDaemon.Daemon.Fakes
                                 }
                             );
         }
+
+        public void VerifyCallService(string? domain = null, string? service = null, string? entityId = null, object? data = null, Times? times = null)
+        {
+            var target = entityId is null ? null : new Target(entityId);
+            var timesCalled = times ?? Times.Once();
+
+            Verify(
+                x => x.CallService(
+                    It.Is<string>(d => d != null && domain == null ? d.Length > 0 : d == domain)
+                    , It.Is<string>(s => s != null && service == null ? s.Length > 0 : s == service)
+                    , It.Is<Target>(t => target == null || t != null && t!.EntityIds!.Contains(entityId)) // TODO: make it support other types of targets
+                    , It.Is<object?>(d => data == null || Equals(d, data))
+                    , It.IsAny<bool>()),
+                timesCalled);
+        }
+
 
         /// <summary>
         ///     Verify CallService been called using Moq.Times.

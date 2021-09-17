@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using NetDaemon.Common.Reactive.Services;
 
 namespace NetDaemon.Common
 {
@@ -7,6 +8,11 @@ namespace NetDaemon.Common
     {
         public Target()
         {
+        }
+
+        public Target(RxEntityBase entity)
+        {
+            EntityIds = entity.EntityIds.ToList();
         }
 
         public Target(params string[] entityIds)

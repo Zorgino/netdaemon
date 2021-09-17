@@ -15,5 +15,10 @@ namespace NetDaemon.Common.Reactive.States
         public bool Unavailable => State is "unavailable";
 
         public bool Unknown => State is "unknown";
+
+        public override string ToString()
+        {
+            return State;
+        }
     }
 }
