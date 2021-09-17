@@ -8,7 +8,7 @@ namespace NetDaemon.Service.App.CodeGeneration.Helpers
     {
         internal static Regex IllegalCharactersRegex = new (@"[^a-zA-Z0-9_]+", RegexOptions.Compiled);
 
-        public static string GetEntitiesTypeName(string prefix)
+        public static string GetDomainEntitiesTypeName(string prefix)
         {
             var normalizedDomain = prefix.ToNormalizedPascalCase();
 

@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using NetDaemon.Common;
 using NetDaemon.Common.Reactive;
@@ -40,19 +42,19 @@ namespace NetDaemon.Service.App.CodeGeneration
                     GenerateRootEntitiesClass(entityDomains)
                 },
 
-                GenerateEntitiesTypes(entityIds),
-                GenerateEntityDomainTypes(entityDomains),
+                GenerateDomainEntitiesTypes(entities),
+                GenerateEntityDomainBaseTypes(entityDomains),
                 GenerateEntityDomainAttributeRecords(entities),
                 GenerateEntityAttributeRecords(entities)
             }.SelectMany(x => x);
         }
 
-        private IEnumerable<TypeDeclarationSyntax> GenerateEntityDomainTypes(IEnumerable<string> domains)
+        private IEnumerable<TypeDeclarationSyntax> GenerateEntityDomainBaseTypes(IEnumerable<string> domains)
         {
-            return domains.SelectMany(GenerateEntityDomainType);
+            return domains.SelectMany(GenerateEntityDomainBaseTypes);
         }
 
-        private IEnumerable<TypeDeclarationSyntax> GenerateEntityDomainType(string domain)
+        private IEnumerable<TypeDeclarationSyntax> GenerateEntityDomainBaseTypes(string domain)
         {
             return new[]{
                 GenerateEntityDomainCommonType(domain),
@@ -87,7 +89,7 @@ namespace NetDaemon.Service.App.CodeGeneration
 
             var stateType = GetDomainEntityStateType(domain) ?? typeof(StringState);
 
-            var baseClass = $"{GetDomainEntityTypeName(domain)}<{stateType},{attributesGeneric}>";
+            var baseClass = $"{entityClass}<{stateType}, {attributesGeneric}>";
             var classDeclaration = $@"class {entityGenericClass} : {baseClass}
                                             {GetReferenceTypeConstraint(attributesGeneric)}
                                     {{
@@ -120,13 +122,11 @@ namespace NetDaemon.Service.App.CodeGeneration
             return ParseClass(classDeclaration);
         }
 
-
-
         private static TypeDeclarationSyntax GenerateRootEntitiesInterface(IEnumerable<string> domains)
         {
             var autoProperties = domains.Select(domain =>
             {
-                var typeName = GetEntitiesTypeName(domain);
+                var typeName = GetDomainEntitiesTypeName(domain);
                 var propertyName = domain.ToPascalCase();
 
                 return Property(typeName, propertyName, set: false);
@@ -144,7 +144,7 @@ namespace NetDaemon.Service.App.CodeGeneration
 
             var properties = domains.Select(domain =>
             {
-                var entitiesTypeName = GetEntitiesTypeName(domain);
+                var entitiesTypeName = GetDomainEntitiesTypeName(domain);
                 var entitiesPropertyName = domain.ToPascalCase();
 
                 return ParseProperty($"{entitiesTypeName} {entitiesPropertyName} => new(_{haContextNames.VariableName});").ToPublic();
@@ -177,7 +177,7 @@ namespace NetDaemon.Service.App.CodeGeneration
             var mainRecords = new List<TypeDeclarationSyntax>();
             var partialCommentedRecords = new List<TypeDeclarationSyntax>();
 
-            foreach (var entityDomainGroups in entities.GroupBy(x => EntityIdHelper.GetDomain(x.EntityId)))
+            foreach (var entityDomainGroups in entities.GroupBy(x => EntityHelper.GetDomain(x.EntityId)))
             {
                 var attributesTypeName = GetAttributesTypeName(entityDomainGroups.Key);
 
@@ -189,7 +189,7 @@ namespace NetDaemon.Service.App.CodeGeneration
                     .Distinct()
                     .ToList();
 
-                var conflictingHaAttributes = GetConflicts(attrs).ToList();
+                var conflictingHaAttributes = GetConflictingEntityAttributes(attrs).ToList();
 
                 var autoProperties = new List<PropertyDeclarationSyntax>();
 
@@ -220,7 +220,7 @@ namespace NetDaemon.Service.App.CodeGeneration
             return mainRecords.Concat(partialCommentedRecords).Select(t => t.ToPublic().ToPartial());
         }
 
-        private static IEnumerable<HaAttributeProperty> GetConflicts(IEnumerable<HaAttributeProperty> attrs)
+        private static IEnumerable<HaAttributeProperty> GetConflictingEntityAttributes(IEnumerable<HaAttributeProperty> attrs)
         {
             var result = new List<HaAttributeProperty>();
 
@@ -240,37 +240,63 @@ namespace NetDaemon.Service.App.CodeGeneration
             return result.Distinct();
         }
 
-        private IEnumerable<TypeDeclarationSyntax> GenerateEntitiesTypes(IEnumerable<string> entityIds)
+        private IEnumerable<TypeDeclarationSyntax> GenerateDomainEntitiesTypes(IEnumerable<IEntityProperties> entities)
         {
-            return entityIds.GroupBy(EntityIdHelper.GetDomain, GenerateEntitiesType);
+            return entities.GroupBy(EntityHelper.GetDomain, GenerateDomainEntitiesType);
         }
 
-        private TypeDeclarationSyntax GenerateEntitiesType(string domain, IEnumerable<string> entityIds)
+        private TypeDeclarationSyntax GenerateDomainEntitiesType(string domain, IEnumerable<IEntityProperties> entities)
         {
-            var entityClass = ClassWithInjected<INetDaemonRxApp>(GetEntitiesTypeName(domain), true, entityIds)
+            var entityDomainTypeName = GetDomainEntitiesTypeName(domain);
+
+            var entityClass = ClassWithInjected<INetDaemonRxApp>(entityDomainTypeName, true, entities.Select(x => x.EntityId))
                 .ToPublic()
                 .ToPartial()
                 .WithBase(GetDomainEntityTypeName(domain));
 
-            var entityProperty = entityIds.Select(entityId => GenerateEntityProperty(entityId, domain)).ToArray();
+            var entityProperty = entities
+                .Where(EntityIsNotNetDaemonGenerated)
+                .Select(x => x.EntityId)
+                .Select(GenerateEntityProperty)
+                .ToArray();
 
             return entityClass.AddMembers(entityProperty);
         }
 
-        private static Func<string, bool> EntityIsOfDomain(string domain)
+        // private bool EntityIdPropertyNotImplementedInPartial(string entityId)
+        // {
+        //     var domainEntityTypeName = GetDomainEntityTypeName(EntityIdHelper.GetDomain(entityId));
+        //     var propertyName = EntityIdHelper.GetEntity(entityId).ToNormalizedPascalCase("E_");
+        //
+        //     var partialEntityType = GetType()
+        //         .Assembly
+        //         .DefinedTypes
+        //         .FirstOrDefault(t => t.Name == domainEntityTypeName && t.GetCustomAttribute<Partial>() is not null);
+        //
+        //     if (partialEntityType is null)
+        //     {
+        //         return true;
+        //     }
+        //
+        //     return Array.Find(partialEntityType.GetProperties(BindingFlags.Public), p => p.Name == propertyName) is null;
+        // }
+
+        private bool EntityIsNotNetDaemonGenerated(IEntityProperties entity)
         {
-            return n => n.StartsWith(domain + ".", StringComparison.InvariantCultureIgnoreCase);
+            return entity.Attribute.integration != "netdaemon";
         }
 
-        private PropertyDeclarationSyntax GenerateEntityProperty(string entityId, string domain)
+        private PropertyDeclarationSyntax GenerateEntityProperty(string entityId)
         {
-            var entityName = EntityIdHelper.GetEntity(entityId);
-
+            var domainEntityTypeName = GetDomainEntityTypeName(EntityHelper.GetDomain(entityId));
+            var attributesTypeName = GetAttributesTypeName(entityId);
             var state = GetEntityStateType(entityId);
+            var propertyName = EntityHelper.GetEntity(entityId).ToNormalizedPascalCase("E_");
+            var variableName = GetNames<INetDaemonRxApp>().VariableName;
 
             var propertyCode = state is null
-                ? $@"{GetDomainEntityTypeName(domain)}<{GetAttributesTypeName(entityId)}> {entityName.ToNormalizedPascalCase("E_")} => new(_{GetNames<INetDaemonRxApp>().VariableName}, ""{entityId}"");"
-                : $@"{GetDomainEntityTypeName(domain)}<{state.FullName}, {GetAttributesTypeName(entityId)}> {entityName.ToNormalizedPascalCase("E_")} => new(_{GetNames<INetDaemonRxApp>().VariableName}, ""{entityId}"");";
+                ? $@"{domainEntityTypeName}<{attributesTypeName}> {propertyName} => new(_{variableName}, ""{entityId}"");"
+                : $@"{domainEntityTypeName}<{state.FullName}, {attributesTypeName}> {propertyName} => new(_{variableName}, ""{entityId}"");";
 
             return ParseProperty(propertyCode).ToPublic();
         }
@@ -279,6 +305,6 @@ namespace NetDaemon.Service.App.CodeGeneration
         ///     Returns a list of domains from all entities
         /// </summary>
         /// <param name="entities">A list of entities</param>
-        internal static IEnumerable<string> GetDomainsFromEntities(IEnumerable<string> entities) => entities.Select(EntityIdHelper.GetDomain).Distinct();
+        internal static IEnumerable<string> GetDomainsFromEntities(IEnumerable<string> entities) => entities.Select(EntityHelper.GetDomain).Distinct();
     }
 }

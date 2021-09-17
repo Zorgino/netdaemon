@@ -14,7 +14,7 @@ namespace NetDaemon.Service.App.CodeGeneration
     {
         private static IEnumerable<ClassDeclarationSyntax> GenerateExtensionMethodClasses(IEnumerable<HassServiceDomain> serviceDomains, IEnumerable<OldEntityState> entities)
         {
-            var entityDomains = entities.GroupBy(e => EntityIdHelper.GetDomain(e.EntityId)).Select(x => x.Key);
+            var entityDomains = entities.GroupBy(e => EntityHelper.GetDomain(e.EntityId)).Select(x => x.Key);
 
             foreach (var domainServicesGroup in serviceDomains
                 .Where(sd =>
