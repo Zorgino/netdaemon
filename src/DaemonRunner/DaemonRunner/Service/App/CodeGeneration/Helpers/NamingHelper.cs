@@ -6,7 +6,10 @@ namespace NetDaemon.Service.App.CodeGeneration.Helpers
 {
     internal static class NamingHelper
     {
-        internal static Regex IllegalCharactersRegex = new (@"[^a-zA-Z0-9_]+", RegexOptions.Compiled);
+        internal static readonly Regex IllegalCharactersRegex = new (@"[^a-zA-Z0-9_]+", RegexOptions.Compiled);
+
+        public const string TAttributes = "TAttributes";
+        public const string TState = "TState";
 
         public static string GetDomainEntitiesTypeName(string prefix)
         {

@@ -20,7 +20,7 @@ namespace NetDaemon.Service.App.CodeGeneration
 
         public string TypeName => Type.GetCompilableName() + "?";
 
-        public string PropName => HaName.ToNormalizedPascalCase();
+        public string PropName => GetPropName(HaName);
 
         public string BackingPropName => "_" + HaName.ToCompilable();
 
@@ -34,5 +34,9 @@ namespace NetDaemon.Service.App.CodeGeneration
         public PropertyDeclarationSyntax GetJsonElementProperty() => SyntaxFactoryHelper.Property(typeof(JsonElement).FullName!,
             BackingPropName).WithAttribute<JsonPropertyNameAttribute>(HaName);
 
+        public static string GetPropName(string haName)
+        {
+            return haName.ToNormalizedPascalCase();
+        }
     }
 }

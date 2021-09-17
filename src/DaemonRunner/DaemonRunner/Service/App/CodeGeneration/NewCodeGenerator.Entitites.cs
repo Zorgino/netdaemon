@@ -3,6 +3,8 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using NetDaemon.Common;
 using NetDaemon.Common.Reactive;
@@ -45,7 +47,7 @@ namespace NetDaemon.Service.App.CodeGeneration
                 GenerateDomainEntitiesTypes(entities),
                 GenerateEntityDomainBaseTypes(entityDomains),
                 GenerateEntityDomainAttributeRecords(entities),
-                GenerateEntityAttributeRecords(entities)
+                // GenerateEntityAttributeRecords(entities)
             }.SelectMany(x => x);
         }
 
@@ -94,63 +96,87 @@ namespace NetDaemon.Service.App.CodeGeneration
 
         private IEnumerable<TypeDeclarationSyntax> GenerateEntityDomainBaseTypes(string domain)
         {
-            return new[]{
+            return new[]
+            {
+                GenerateEntityDomainGenericStateAndAttributesType(domain),
+                GenerateEntityDomainGenericStateType(domain),
+                // GenerateEntityDomainGenericAttributesType(domain),
                 GenerateEntityDomainCommonType(domain),
-                GenerateEntityDomainGenericAttributesType(domain),
-                GenerateEntityDomainGenericStateAndAttributesType(domain)
-            }.Select(x => x.ToPublic().ToPartial());
-        }
-
-        private static TypeDeclarationSyntax GenerateEntityDomainCommonType(string domain)
-        {
-            var entityClass = GetDomainEntityTypeName(domain);
-            var (className, variableName) = GetNames<INetDaemonRxApp>();
-
-            var baseClass = $"{GetDomainEntityTypeName(domain)}<{GetAttributesTypeName(domain)}>";
-            var classDeclaration = $@"class {entityClass} : {baseClass}
-                                    {{
-                                            public {entityClass}({className} {variableName}, params string[] entityIds) : base({variableName}, entityIds)
-                                            {{
-                                            }}
-                                    }}";
-
-            return ParseClass(classDeclaration);
-        }
-
-        private TypeDeclarationSyntax GenerateEntityDomainGenericAttributesType(string domain)
-        {
-            var entityClass = GetDomainEntityTypeName(domain);
-
-            var attributesGeneric = "TAttributes";
-            var entityGenericClass = $"{entityClass}<{attributesGeneric}>";
-            var (className, variableName) = GetNames<INetDaemonRxApp>();
-
-            var stateType = GetDomainEntityStateType(domain) ?? typeof(StringState);
-
-            var baseClass = $"{entityClass}<{stateType}, {attributesGeneric}>";
-            var classDeclaration = $@"class {entityGenericClass} : {baseClass}
-                                            {GetReferenceTypeConstraint(attributesGeneric)}
-                                    {{
-                                            public {entityClass}({className} {variableName}, params string[] entityIds) : base({variableName}, entityIds)
-                                            {{
-                                            }}
-                                    }}";
-
-            return ParseClass(classDeclaration);
+            }
+                .Select(x => x.ToPublic().ToPartial());
         }
 
         private static TypeDeclarationSyntax GenerateEntityDomainGenericStateAndAttributesType(string domain)
         {
-            var entityClass = GetDomainEntityTypeName(domain);
             var (className, variableName) = GetNames<INetDaemonRxApp>();
-            var statesGeneric = "TState";
-            var attributesGeneric = "TAttributes";
-            var entityGenericClass = $"{entityClass}<{statesGeneric}, {attributesGeneric}>";
 
-            string baseClass = $"{typeof(RxEntityBase).FullName}<{entityGenericClass}, {typeof(EntityState).FullName}<{statesGeneric}, {attributesGeneric}>, {statesGeneric}, {attributesGeneric}>";
+            var entityClass = GetDomainEntityTypeName(domain);
+            var entityGenericClass = $"{entityClass}<{TState}, {TAttributes}>";
+
+            string baseClass = $"{typeof(RxEntityBase).FullName}<{entityGenericClass}, {typeof(EntityState).FullName}<{TState}, {TAttributes}>, {TState}, {TAttributes}>";
             string classDeclaration = $@"class {entityGenericClass} : {baseClass}
-                                            {GetReferenceTypeConstraint(attributesGeneric)}
-                                            {GetReferenceTypeConstraint(statesGeneric)}
+                                            {GetReferenceTypeConstraint(TAttributes)}
+                                            {GetTypeConstraint(TState, typeof(StateObject))}
+                                    {{
+                                            public {entityClass}({className} {variableName}, params string[] entityIds) : base({variableName}, entityIds)
+                                            {{
+                                            }}
+                                    }}";
+
+            return ParseClass(classDeclaration);
+        }
+
+        private static TypeDeclarationSyntax GenerateEntityDomainGenericStateType(string domain)
+        {
+            var (className, variableName) = GetNames<INetDaemonRxApp>();
+
+            var entityClass = GetDomainEntityTypeName(domain);
+            var attributesTypeName = GetAttributesTypeName(domain);
+
+            var entityGenericClass = $"{entityClass}<{TState}>";
+            string baseClass = $"{typeof(RxEntityBase).FullName}<{entityGenericClass}, {typeof(EntityState).FullName}<{TState}, {attributesTypeName}>, {TState}, {attributesTypeName}>";
+
+            string classDeclaration = $@"class {entityGenericClass} : {baseClass}
+                                            {GetReferenceTypeConstraint(TState)}
+                                    {{
+                                            public {entityClass}({className} {variableName}, params string[] entityIds) : base({variableName}, entityIds)
+                                            {{
+                                            }}
+                                    }}";
+
+            return ParseClass(classDeclaration);
+        }
+
+        // private TypeDeclarationSyntax GenerateEntityDomainGenericAttributesType(string domain)
+        // {
+        //     var (className, variableName) = GetNames<INetDaemonRxApp>();
+        //
+        //     var entityClass = GetDomainEntityTypeName(domain);
+        //     var entityGenericClass = $"{entityClass}<{TAttributes}>";
+        //
+        //     var stateType = GetDomainEntityStateType(domain) ?? typeof(StringState);
+        //
+        //     var baseClass = $"{entityClass}<{stateType}, {TAttributes}>";
+        //     var classDeclaration = $@"class {entityGenericClass} : {baseClass}
+        //                             {{
+        //                                     public {entityClass}({className} {variableName}, params string[] entityIds) : base({variableName}, entityIds)
+        //                                     {{
+        //                                     }}
+        //                             }}";
+        //
+        //     return ParseClass(classDeclaration);
+        // }
+
+        private TypeDeclarationSyntax GenerateEntityDomainCommonType(string domain)
+        {
+            var (className, variableName) = GetNames<INetDaemonRxApp>();
+
+            var entityClass = GetDomainEntityTypeName(domain);
+
+            var stateType = GetDomainEntityStateType(domain) ?? typeof(StringState);
+            var baseClass = $"{entityClass}<{stateType}>";
+
+            var classDeclaration = $@"class {entityClass} : {baseClass}
                                     {{
                                             public {entityClass}({className} {variableName}, params string[] entityIds) : base({variableName}, entityIds)
                                             {{
@@ -164,22 +190,61 @@ namespace NetDaemon.Service.App.CodeGeneration
 
         #region ClimateAttributes, ClimateAcAttributes
 
-         private IEnumerable<TypeDeclarationSyntax> GenerateEntityAttributeRecords(IEnumerable<IEntityProperties> entities)
+        //  private IEnumerable<TypeDeclarationSyntax> GenerateEntityAttributeRecords(IEnumerable<IEntityProperties> entities)
+        // {
+        //     return entities.Select(GenerateEntityAttributeRecord);
+        // }
+        //
+        // private TypeDeclarationSyntax GenerateEntityAttributeRecord(IEntityProperties entity)
+        // {
+        //     var attributesTypeName = GetAttributesTypeName(entity.EntityId);
+        //
+        //     var autoProperties = new Dictionary<string, object>(entity.Attribute)
+        //         .Select(x => new HaAttributeProperty(x.Key, x.Value.GetTypeByValues().ToTypeCanBeImplicitlyConvertedTo()))
+        //         .OrderBy(a => a.HaName)
+        //         .Distinct()
+        //         .Select(a => a.GetAutoProperty().ToPublic());
+        //
+        //     return Record(attributesTypeName, autoProperties).ToPublic().ToPartial();
+        // }
+
+        private IEnumerable<HaAttributeProperty> GetExistingProperties(string attributesTypeName)
         {
-            return entities.Select(GenerateEntityAttributeRecord);
-        }
+            var partialEntityType = GetType()
+                .Assembly
+                .DefinedTypes
+                .FirstOrDefault(t => t.Name == attributesTypeName);
 
-        private TypeDeclarationSyntax GenerateEntityAttributeRecord(IEntityProperties entity)
-        {
-            var attributesTypeName = GetAttributesTypeName(entity.EntityId);
+            if (partialEntityType is null)
+            {
+                return Array.Empty<HaAttributeProperty>();
+            }
 
-            var autoProperties = new Dictionary<string, object>(entity.Attribute)
-                .Select(x => new HaAttributeProperty(x.Key, x.Value.GetTypeByValues().ToTypeCanBeImplicitlyConvertedTo()))
-                .OrderBy(a => a.HaName)
-                .Distinct()
-                .Select(a => a.GetAutoProperty().ToPublic());
-
-            return Record(attributesTypeName, autoProperties).ToPublic().ToPartial();
+            return partialEntityType
+                .DeclaredProperties
+                .Where(x => x.PropertyType == typeof(JsonElement))
+                .Select(p
+                    => new
+                    {
+                        HaName = p.GetCustomAttribute<JsonPropertyNameAttribute>()?.Name,
+                    })
+                .Where(x => x.HaName is not null)
+                .Select(x =>
+                    new{
+                        x.HaName,
+                        partialEntityType
+                                .DeclaredProperties
+                                .FirstOrDefault(p => p.PropertyType != typeof(JsonElement) && p.Name == HaAttributeProperty.GetPropName(x.HaName))?
+                                .PropertyType
+                        })
+                .Where(x => x.PropertyType is not null)
+                .Select(p
+                    => new
+                    {
+                        p.HaName,
+                        Type = p.PropertyType!
+                    })
+                .Select(x => new HaAttributeProperty(x.HaName!, x.Type));
         }
 
         private IEnumerable<TypeDeclarationSyntax> GenerateEntityDomainAttributeRecords(IEnumerable<IEntityProperties> entities)
@@ -195,6 +260,7 @@ namespace NetDaemon.Service.App.CodeGeneration
                     .Select(es => new Dictionary<string, object>(es.Attribute))
                     .SelectMany(x => x)
                     .Select(x => new HaAttributeProperty(x.Key, x.Value.GetTypeByValues().ToTypeCanBeImplicitlyConvertedTo()))
+                    .Concat(GetExistingProperties(attributesTypeName))
                     .OrderBy(a => a.HaName)
                     .Distinct()
                     .ToList();
@@ -285,14 +351,14 @@ namespace NetDaemon.Service.App.CodeGeneration
         private PropertyDeclarationSyntax GenerateEntityProperty(string entityId)
         {
             var domainEntityTypeName = GetDomainEntityTypeName(EntityHelper.GetDomain(entityId));
-            var attributesTypeName = GetAttributesTypeName(entityId);
+            // var attributesTypeName = GetAttributesTypeName(entityId);
             var state = GetEntityStateType(entityId);
             var propertyName = EntityHelper.GetEntity(entityId).ToNormalizedPascalCase("E_");
             var variableName = GetNames<INetDaemonRxApp>().VariableName;
 
             var propertyCode = state is null
-                ? $@"{domainEntityTypeName}<{attributesTypeName}> {propertyName} => new(_{variableName}, ""{entityId}"");"
-                : $@"{domainEntityTypeName}<{state.FullName}, {attributesTypeName}> {propertyName} => new(_{variableName}, ""{entityId}"");";
+                ? $@"{domainEntityTypeName} {propertyName} => new(_{variableName}, ""{entityId}"");"
+                : $@"{domainEntityTypeName}<{state.FullName}> {propertyName} => new(_{variableName}, ""{entityId}"");";
 
             return ParseProperty(propertyCode).ToPublic();
         }

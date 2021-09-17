@@ -15,6 +15,12 @@ namespace NetDaemon.Service.App.CodeGeneration.Helpers
             return $"where {genericTypeName}: class";
         }
 
+        public static string GetTypeConstraint(string genericTypeName, Type constraintType)
+        {
+            return $"where {genericTypeName}: {constraintType.FullName}";
+        }
+
+
         public static GlobalStatementSyntax ParseMethod(string code)
         {
             return Parse<GlobalStatementSyntax>(code);
