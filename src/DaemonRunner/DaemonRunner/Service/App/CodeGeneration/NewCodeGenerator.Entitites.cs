@@ -47,7 +47,6 @@ namespace NetDaemon.Service.App.CodeGeneration
                 GenerateDomainEntitiesTypes(entities),
                 GenerateEntityDomainBaseTypes(entityDomains),
                 GenerateEntityDomainAttributeRecords(entities),
-                // GenerateEntityAttributeRecords(entities)
             }.SelectMany(x => x);
         }
 
@@ -100,7 +99,6 @@ namespace NetDaemon.Service.App.CodeGeneration
             {
                 GenerateEntityDomainGenericStateAndAttributesType(domain),
                 GenerateEntityDomainGenericStateType(domain),
-                // GenerateEntityDomainGenericAttributesType(domain),
                 GenerateEntityDomainCommonType(domain),
             }
                 .Select(x => x.ToPublic().ToPartial());
@@ -147,26 +145,6 @@ namespace NetDaemon.Service.App.CodeGeneration
             return ParseClass(classDeclaration);
         }
 
-        // private TypeDeclarationSyntax GenerateEntityDomainGenericAttributesType(string domain)
-        // {
-        //     var (className, variableName) = GetNames<INetDaemonRxApp>();
-        //
-        //     var entityClass = GetDomainEntityTypeName(domain);
-        //     var entityGenericClass = $"{entityClass}<{TAttributes}>";
-        //
-        //     var stateType = GetDomainEntityStateType(domain) ?? typeof(StringState);
-        //
-        //     var baseClass = $"{entityClass}<{stateType}, {TAttributes}>";
-        //     var classDeclaration = $@"class {entityGenericClass} : {baseClass}
-        //                             {{
-        //                                     public {entityClass}({className} {variableName}, params string[] entityIds) : base({variableName}, entityIds)
-        //                                     {{
-        //                                     }}
-        //                             }}";
-        //
-        //     return ParseClass(classDeclaration);
-        // }
-
         private TypeDeclarationSyntax GenerateEntityDomainCommonType(string domain)
         {
             var (className, variableName) = GetNames<INetDaemonRxApp>();
@@ -189,24 +167,6 @@ namespace NetDaemon.Service.App.CodeGeneration
         #endregion
 
         #region ClimateAttributes, ClimateAcAttributes
-
-        //  private IEnumerable<TypeDeclarationSyntax> GenerateEntityAttributeRecords(IEnumerable<IEntityProperties> entities)
-        // {
-        //     return entities.Select(GenerateEntityAttributeRecord);
-        // }
-        //
-        // private TypeDeclarationSyntax GenerateEntityAttributeRecord(IEntityProperties entity)
-        // {
-        //     var attributesTypeName = GetAttributesTypeName(entity.EntityId);
-        //
-        //     var autoProperties = new Dictionary<string, object>(entity.Attribute)
-        //         .Select(x => new HaAttributeProperty(x.Key, x.Value.GetTypeByValues().ToTypeCanBeImplicitlyConvertedTo()))
-        //         .OrderBy(a => a.HaName)
-        //         .Distinct()
-        //         .Select(a => a.GetAutoProperty().ToPublic());
-        //
-        //     return Record(attributesTypeName, autoProperties).ToPublic().ToPartial();
-        // }
 
         private IEnumerable<HaAttributeProperty> GetExistingProperties(string attributesTypeName)
         {
